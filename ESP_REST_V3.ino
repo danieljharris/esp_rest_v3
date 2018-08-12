@@ -52,8 +52,9 @@ void saveWiFiCredentials(String ssidStr, String passwordStr);
 void saveWiFiCredentials(String ssidStr, String passwordStr, String nameStr);
 WiFiInfo loadWiFiCredentials();
 String getDeviceIPFromName(String name);
-String getByName(String name, t_http_codes expectedCode);
-String postByName(String name, t_http_codes expectedCode, JsonObject& jsonObject);
+String getByName(String name, String path, t_http_codes expectedCode);
+String getByIP(String ip, String path, t_http_codes expectedCode);
+String postByName(String name, String path, t_http_codes expectedCode, JsonObject& jsonObject);
 
 //Update these numbers per each device ***************************
 const int MASTER_PORT = 235;
@@ -112,12 +113,12 @@ void setup() {
 	bool masterFound = findMaster();
 
 	//If master found: connect
-	if (masterFound) {
+	if (masterFound == true) {
 		if (connectToWiFi(masterInfo, WIFI_STA) == true) {
 			if (getAndSaveMainWiFiInfo() == true) {
 				if (connectToWiFi(loadWiFiCredentials(), WIFI_STA) == true) {
+					startClient();
 					enableOTAUpdates();
-					clientCheckIn();
 				}
 				else { setup(); }
 			}
@@ -129,6 +130,7 @@ void setup() {
 	else {
 		if (rememberWiFiSettings() == true) {
 			if (becomeMaster() == true) {
+				startClient();
 				enableOTAUpdates();
 			}
 			else { enterConfigMode(); }
@@ -142,7 +144,7 @@ void setup() {
 }
 
 void loop() {
-	if (configMode) {
+	if (configMode == true) {
 		if (findMaster()) setup();
 
 		setupServer.handleClient();
@@ -150,8 +152,9 @@ void loop() {
 	else {
 		ArduinoOTA.handle();
 
-		if (isMaster) {
+		if (isMaster == true) {
 			masterServer.handleClient();
+			clientServer.handleClient();
 		}
 		else {
 			clientServer.handleClient();
@@ -301,9 +304,10 @@ bool becomeMaster() {
 	bool masterFound = findMaster();
 
 	//Double checks that master is not available
-	if (!masterFound) {
+	if (masterFound == false) {
 
-		WiFi.config(STATIC_IP, GATEWAY, SUBNET); //Preps to use static IP
+		//Preps to use static IP
+		WiFi.config(STATIC_IP, GATEWAY, SUBNET);
 
 		WiFiInfo info = loadWiFiCredentials();
 
@@ -323,8 +327,8 @@ bool becomeMaster() {
 		//Master server setup
 		masterServer.on("/wifi_info", HTTP_GET, handleMasterGetWiFiInfo);
 
+		//Caller endpoints
 		masterServer.on("/devices", HTTP_GET, handleMasterGetDevices);
-		masterServer.on("/device", HTTP_GET, handleMasterGetInfo);
 		masterServer.on("/device", HTTP_POST, handleMasterSetDevice);
 		masterServer.on("/name", HTTP_POST, handleMasterSetDeviceName);
 
@@ -355,16 +359,8 @@ void handleMasterGetWiFiInfo() {
 	masterServer.send(HTTP_CODE_OK, "application/json", content);
 }
 
-//Might not need this
-void handleMasterGetInfo() {
-	String result = getDeviceInfo();
-	masterServer.send(HTTP_CODE_OK, "application/json", result);
-}
-
 void handleMasterGetDevices() {
 	Serial.println("Entering handleMasterGetDevices");
-
-	delay(2000);
 
 	DynamicJsonBuffer outputBuffer;
 	JsonObject& output = outputBuffer.createObject();
@@ -377,6 +373,16 @@ void handleMasterGetDevices() {
 	//Clears known clients/devices ready to repopulate the vector
 	clientLookup.clear();
 
+	//Adds master (itself) to clientLookup
+	WiFiInfo info = loadWiFiCredentials();
+	Device myself;
+	myself.name = info.name;
+	myself.ip = WiFi.localIP().toString();
+	clientLookup.push_back(myself);
+
+	//Adds master (itself) to returning json array
+	devices.add(getByIP(myself.ip, "/device", HTTP_CODE_OK));
+
 	if (amountOfDevicesFound == 0) {
 		Serial.println("no services found");
 	}
@@ -385,54 +391,35 @@ void handleMasterGetDevices() {
 		Serial.println(" service(s) found");
 		for (int i = 0; i < amountOfDevicesFound; ++i) {
 
-			// Print details for each service found
+			//Prints details for each service found
 			Serial.print(i + 1);
 			Serial.print(": ");
 			Serial.print(MDNS.hostname(i));
 			Serial.print(" (");
 			Serial.print(MDNS.IP(i));
-			Serial.print(":");
-			Serial.print(MDNS.port(i));
 			Serial.println(")");
 
 			//Call the device's IP and get its info
 			String ip = MDNS.IP(i).toString();
-			String port = String(MDNS.port(i));
-			String url = "http://" + ip + ":" + port + "/device";
+			String reply = getByIP(ip, "/device", HTTP_CODE_OK);
 
-			Serial.print("URL: ");
-			Serial.println(url);
-
-			HTTPClient http;
-			http.begin(url);
-
-			if (http.GET() == HTTP_CODE_OK) {
-				String payload = http.getString();
+			if (reply.equals("error") == false) {
 				DynamicJsonBuffer intputBuffer;
-				JsonObject& input = intputBuffer.parseObject(payload);
-
-				Serial.print("From Client - Payload: ");
-				Serial.println(payload);
+				JsonObject& input = intputBuffer.parseObject(reply);
 
 				Device newDevice;
-				newDevice.ip = ip;
 				String name = input["name"];
+				newDevice.ip = ip;
 				newDevice.name = name;
 
 				clientLookup.push_back(newDevice);
-
 				devices.add(input);
 			}
-
-			http.end();
 		}
 	}
 
 	String result;
 	output.printTo(result);
-
-	Serial.print("Replying with: ");
-	Serial.println(result);
 
 	masterServer.send(HTTP_CODE_OK, "application/json", result);
 }
@@ -459,7 +446,7 @@ void handleMasterSetDevice() {
 	output["action"] = action;
 	output["power"] = powered;
 
-	String reply = postByName(name, HTTP_CODE_OK, output);
+	String reply = postByName(name, "/device", HTTP_CODE_OK, output);
 
 	if (reply.equals("error") == false) {
 		//Sends json from client to caller
@@ -491,7 +478,7 @@ void handleMasterSetDeviceName() {
 	JsonObject& output = outputBuffer.createObject();
 	output["new_name"] = newName;
 
-	String reply = postByName(oldName, HTTP_CODE_OK, output);
+	String reply = postByName(oldName, "/name", HTTP_CODE_OK, output);
 
 	if (reply.equals("error") == false) {
 		//Sends json from client to caller
@@ -512,6 +499,26 @@ void handleMasterUnknown() {
 
 
 //Client functions
+bool startClient() {
+	Serial.println("Entering startClient");
+
+	//Starts up MDNS
+	char hostString[16] = { 0 };
+	sprintf(hostString, "ESP_%06X", ESP.getChipId());
+	MDNS.begin(hostString);
+
+	//Broadcasts IP so can be seen by master
+	MDNS.addService(MDNS_ID, "tcp", 80);
+
+	//Client server setup
+	clientServer.on("/device", HTTP_GET, handleClientGetInfo);
+	clientServer.on("/device", HTTP_POST, handleClientSetDevice);
+	clientServer.on("/name", HTTP_POST, handleClientSetName);
+
+	clientServer.onNotFound(handleClientUnknown);
+	clientServer.begin();
+}
+
 bool getAndSaveMainWiFiInfo() {
 	Serial.println("Entering getAndSaveMainWiFiInfo");
 
@@ -548,28 +555,23 @@ bool getAndSaveMainWiFiInfo() {
 	}
 }
 
-void clientCheckIn() {
-	Serial.println("Entering clientCheckIn");
-
-	//Starts up MDNS
-	char hostString[16] = { 0 };
-	sprintf(hostString, "ESP_%06X", ESP.getChipId());
-	MDNS.begin(hostString);
-
-	//Broadcasts IP so can be seen by master
-	MDNS.addService(MDNS_ID, "tcp", 80);
-
-	//Client server setup
-	clientServer.on("/device", HTTP_GET, handleClientGetInfo);
-	clientServer.on("/device", HTTP_POST, handleClientSetDevice);
-	clientServer.on("/name", HTTP_POST, handleClientSetName);
-
-	clientServer.onNotFound(handleClientUnknown);
-	clientServer.begin();
-}
-
 void handleClientGetInfo() {
-	String result = getDeviceInfo();
+	Serial.println("Entering handleClientGetInfo");
+
+	DynamicJsonBuffer outputBuffer;
+	JsonObject& output = outputBuffer.createObject();
+
+	WiFiInfo info = loadWiFiCredentials();
+	output["name"] = info.name;
+	output["ip"] = WiFi.localIP().toString();
+	output["powered"] = gpioPinState;
+
+	String result;
+	output.printTo(result);
+
+	Serial.print("Replying with: ");
+	Serial.println(result);
+
 	clientServer.send(HTTP_CODE_OK, "application/json", result);
 }
 
@@ -768,26 +770,6 @@ void enableOTAUpdates() {
 	ArduinoOTA.begin();
 }
 
-String getDeviceInfo() {
-	Serial.println("Entering getDeviceInfo");
-
-	DynamicJsonBuffer outputBuffer;
-	JsonObject& output = outputBuffer.createObject();
-
-	WiFiInfo info = loadWiFiCredentials();
-	output["name"] = info.name;
-	output["ip"] = WiFi.localIP().toString();
-	output["powered"] = gpioPinState;
-
-	String result;
-	output.printTo(result);
-
-	Serial.print("Replying with: ");
-	Serial.println(result);
-
-	return result;
-}
-
 String getDeviceIPFromName(String name) {
 	for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
 		Device device = *it;
@@ -800,9 +782,13 @@ String getDeviceIPFromName(String name) {
 	return "";
 }
 
-String getByName(String name, t_http_codes expectedCode) {
+String getByName(String name, String path, t_http_codes expectedCode) {
 	String ip = getDeviceIPFromName(name);
-	String url = "http://" + ip + ":80/device";
+	return getByIP(ip, path, expectedCode);
+}
+
+String getByIP(String ip, String path, t_http_codes expectedCode) {
+	String url = "http://" + ip + ":80" + path;
 
 	HTTPClient http;
 	http.begin(url);
@@ -821,9 +807,9 @@ String getByName(String name, t_http_codes expectedCode) {
 	return toReturn;
 }
 
-String postByName(String name, t_http_codes expectedCode, JsonObject& jsonObject) {
+String postByName(String name, String path, t_http_codes expectedCode, JsonObject& jsonObject) {
 	String ip = getDeviceIPFromName(name);
-	String url = "http://" + ip + ":80/device";
+	String url = "http://" + ip + ":80" + path;
 
 	String payload;
 	jsonObject.printTo(payload);
