@@ -4,7 +4,6 @@ Created:	05/08/2018 07:48:35 PM
 Author:	    Daniel Harris
 */
 
-#include <String>
 #include <vector>
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
@@ -15,9 +14,10 @@ Author:	    Daniel Harris
 #include <ArduinoJson.h>
 
 
-
 /*
 	TODO:
+	() Populate clientLookup in becomeMaster
+	() Add endpoint that updates clientLookup without replying to user (If that is faster, if not dont bother)
 	() Allow Master endpoints to be called using device IPs as well as Names (Will fix the issue of 2 devices having the same name)
 
 	() Make sure all included libraries are needed/used
@@ -26,6 +26,7 @@ Author:	    Daniel Harris
 	() Look into implementing SmartConfig to connect devices to router
 	() Add functionality for custom circuit board and input detection (Like PC's ESP)
 	() Dont run turn on function if already on, and dont run turn off function if already off
+	() Try to move some of the functions to seperate files (Get practice with hearder files)
 
 	DONE:
 	() If ESP does not reply when Master is doing get devices, then remove that ESP from connectedClients
@@ -615,6 +616,11 @@ ReturnInfo clientSetDevice(String inputStr) {
 	if (input["action"] == "toggle") {
 		power_toggle();
 	}
+	else if (input["action"] == "pulse") {
+		power_on();
+		delay(1000);
+		power_off();
+	}
 	else if (input["action"] == "set") {
 		if (input["power"] == true) {
 			power_on();
@@ -805,7 +811,7 @@ String getDeviceIPFromName(String name) {
 	for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
 		Device device = *it;
 
-		if (device.name.equals(name) == true) {
+		if (device.name.equalsIgnoreCase(name) == true) {
 			return device.ip;
 		}
 	}
