@@ -17,17 +17,20 @@ Author:	    Daniel Harris
 
 
 /*
-TODO:
+	TODO:
+	() Allow Master endpoints to be called using device IPs as well as Names (Will fix the issue of 2 devices having the same name)
 
-() Add master to its own connectedClients or master can not be accessed
-() If ESP does not reply when Master is doing get devices, then remove that ESP from connectedClients
-() Allow Master endpoints to be called using device IPs as well as Names (Will fix the issue of 2 devices having the same name)
-() Be able to change the name of the master ESP (Maybe see if the client server can be run at the same time as master?)
+	() Make sure all included libraries are needed/used
+	() Try to reduce the sleep timers to make things faster
+	() Make SSID a drop down menu in config site
+	() Look into implementing SmartConfig to connect devices to router
+	() Add functionality for custom circuit board and input detection (Like PC's ESP)
+	() Dont run turn on function if already on, and dont run turn off function if already off
 
-() Try to reduce the sleep timers to make things faster
-() Make SSID a drop down menu in config site
-() Look into implementing SmartConfig to connect devices to router
-() Add functionality for custom circuit board and input detection (Like PC's ESP)
+	DONE:
+	() If ESP does not reply when Master is doing get devices, then remove that ESP from connectedClients
+	() Add master to its own connectedClients or master can not be accessed
+	() Be able to change the name of the master ESP (Maybe see if the client server can be run at the same time as master?)
 
 */
 
@@ -43,6 +46,11 @@ typedef struct Device {
 	String name = "Unknown";
 };
 
+typedef struct ReturnInfo {
+	t_http_codes code = HTTP_CODE_NOT_FOUND;
+	String body = "";
+};
+
 std::vector<Device> clientLookup;
 
 //Declareing functions
@@ -55,6 +63,8 @@ String getDeviceIPFromName(String name);
 String getByName(String name, String path, t_http_codes expectedCode);
 String getByIP(String ip, String path, t_http_codes expectedCode);
 String postByName(String name, String path, t_http_codes expectedCode, JsonObject& jsonObject);
+String clientGetInfo();
+ReturnInfo clientSetDevice(String inputStr);
 
 //Update these numbers per each device ***************************
 const int MASTER_PORT = 235;
@@ -130,17 +140,12 @@ void setup() {
 	else {
 		if (rememberWiFiSettings() == true) {
 			if (becomeMaster() == true) {
-				startClient();
 				enableOTAUpdates();
 			}
 			else { enterConfigMode(); }
 		}
 		else { enterConfigMode(); }
 	}
-
-
-
-
 }
 
 void loop() {
@@ -154,7 +159,6 @@ void loop() {
 
 		if (isMaster == true) {
 			masterServer.handleClient();
-			clientServer.handleClient();
 		}
 		else {
 			clientServer.handleClient();
@@ -381,7 +385,9 @@ void handleMasterGetDevices() {
 	clientLookup.push_back(myself);
 
 	//Adds master (itself) to returning json array
-	devices.add(getByIP(myself.ip, "/device", HTTP_CODE_OK));
+	DynamicJsonBuffer masterInputBuffer;
+	JsonObject& masterInput = masterInputBuffer.parseObject(clientGetInfo());
+	devices.add(masterInput);
 
 	if (amountOfDevicesFound == 0) {
 		Serial.println("no services found");
@@ -448,7 +454,14 @@ void handleMasterSetDevice() {
 
 	String reply = postByName(name, "/device", HTTP_CODE_OK, output);
 
-	if (reply.equals("error") == false) {
+	if (reply.equals("myself") == true) {
+		String result;
+		output.printTo(result);
+
+		ReturnInfo returnInfo = clientSetDevice(result);
+		masterServer.send(returnInfo.code, "application/json", returnInfo.body);
+	}
+	else if (reply.equals("error") == false) {
 		//Sends json from client to caller
 		masterServer.send(HTTP_CODE_OK, "application/json", reply);
 	}
@@ -480,9 +493,13 @@ void handleMasterSetDeviceName() {
 
 	String reply = postByName(oldName, "/name", HTTP_CODE_OK, output);
 
-	if (reply.equals("error") == false) {
+	if (reply.equals("myself") == true) {
+		clientSetName(newName);
+		masterServer.send(HTTP_CODE_OK, "application/json");
+	}
+	else if (reply.equals("error") == false) {
 		//Sends json from client to caller
-		masterServer.send(HTTP_CODE_OK, "application/json", reply);
+		masterServer.send(HTTP_CODE_OK, "application/json");
 	}
 	else {
 		//If cant reach client, reply to caller with error
@@ -531,18 +548,10 @@ bool getAndSaveMainWiFiInfo() {
 	if (http.GET() == HTTP_CODE_OK) {
 		String payload = http.getString();
 
-		Serial.print("From Master - payload: ");
-		Serial.println(payload);
-
 		DynamicJsonBuffer intputBuffer;
 		JsonObject& input = intputBuffer.parseObject(payload);
 		String ssid = input["ssid"];
 		String password = input["password"];
-
-		Serial.print("From Master - SSID: ");
-		Serial.println(ssid);
-		Serial.print("From Master - PASSWORD: ");
-		Serial.println(password);
 
 		saveWiFiCredentials(ssid, password);
 
@@ -558,6 +567,14 @@ bool getAndSaveMainWiFiInfo() {
 void handleClientGetInfo() {
 	Serial.println("Entering handleClientGetInfo");
 
+	String result = clientGetInfo();
+
+	clientServer.send(HTTP_CODE_OK, "application/json", result);
+}
+
+String clientGetInfo() {
+	Serial.println("Entering clientGetInfo");
+
 	DynamicJsonBuffer outputBuffer;
 	JsonObject& output = outputBuffer.createObject();
 
@@ -569,10 +586,7 @@ void handleClientGetInfo() {
 	String result;
 	output.printTo(result);
 
-	Serial.print("Replying with: ");
-	Serial.println(result);
-
-	clientServer.send(HTTP_CODE_OK, "application/json", result);
+	return result;
 }
 
 void handleClientSetDevice() {
@@ -584,10 +598,19 @@ void handleClientSetDevice() {
 		return;
 	}
 
+	ReturnInfo returnInfo = clientSetDevice(clientServer.arg("plain"));
+	clientServer.send(returnInfo.code, "application/json", returnInfo.body);
+}
+
+ReturnInfo clientSetDevice(String inputStr) {
+	Serial.println("Entering clientSetDevice");
+
 	DynamicJsonBuffer intputBuffer;
-	JsonObject& input = intputBuffer.parseObject(clientServer.arg("plain"));
+	JsonObject& input = intputBuffer.parseObject(inputStr);
 
 	bool lastState = gpioPinState;
+
+	ReturnInfo returnInfo;
 
 	if (input["action"] == "toggle") {
 		power_toggle();
@@ -600,13 +623,13 @@ void handleClientSetDevice() {
 			power_off();
 		}
 		else {
-			clientServer.send(HTTP_CODE_BAD_REQUEST);
-			return;
+			returnInfo.code = HTTP_CODE_BAD_REQUEST;
+			return returnInfo;
 		}
 	}
 	else {
-		clientServer.send(HTTP_CODE_BAD_REQUEST);
-		return;
+		returnInfo.code = HTTP_CODE_BAD_REQUEST;
+		return returnInfo;
 	}
 
 	DynamicJsonBuffer outputBuffer;
@@ -618,7 +641,10 @@ void handleClientSetDevice() {
 	String result;
 	output.printTo(result);
 
-	clientServer.send(HTTP_CODE_OK, "application/json", result);
+	returnInfo.code = HTTP_CODE_OK;
+	returnInfo.body = result;
+
+	return returnInfo;
 }
 
 void handleClientSetName() {
@@ -634,9 +660,14 @@ void handleClientSetName() {
 	JsonObject& input = intputBuffer.parseObject(clientServer.arg("plain"));
 	String newName = input["new_name"];
 
-	saveWiFiCredentials(newName);
+	clientSetName(newName);
 
 	clientServer.send(HTTP_CODE_OK, "application/json");
+}
+
+void clientSetName(String newName) {
+	Serial.println("Entering clientSetName");
+	saveWiFiCredentials(newName);
 }
 
 void handleClientUnknown() {
@@ -746,13 +777,13 @@ WiFiInfo loadWiFiCredentials() {
 		password[0] = 0;
 	}
 
-	Serial.println("Recovered credentials:");
-	Serial.print("SSID: ");
-	Serial.println(ssid);
-	Serial.print("Password: ");
-	Serial.println(password);
-	Serial.print("Name: ");
-	Serial.println(name);
+	//Serial.println("Recovered credentials:");
+	//Serial.print("SSID: ");
+	//Serial.println(ssid);
+	//Serial.print("Password: ");
+	//Serial.println(password);
+	//Serial.print("Name: ");
+	//Serial.println(name);
 
 	WiFiInfo info;
 	strcpy(info.ssid, ssid);
@@ -788,6 +819,10 @@ String getByName(String name, String path, t_http_codes expectedCode) {
 }
 
 String getByIP(String ip, String path, t_http_codes expectedCode) {
+	if (ip.equals(WiFi.localIP().toString()) == true) {
+		return "myself";
+	}
+	
 	String url = "http://" + ip + ":80" + path;
 
 	HTTPClient http;
@@ -809,6 +844,14 @@ String getByIP(String ip, String path, t_http_codes expectedCode) {
 
 String postByName(String name, String path, t_http_codes expectedCode, JsonObject& jsonObject) {
 	String ip = getDeviceIPFromName(name);
+	return postByIP(ip, path, expectedCode, jsonObject);
+}
+
+String postByIP(String ip, String path, t_http_codes expectedCode, JsonObject& jsonObject) {
+	if (ip.equals(WiFi.localIP().toString()) == true) {
+		return "myself";
+	}
+
 	String url = "http://" + ip + ":80" + path;
 
 	String payload;
