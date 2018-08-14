@@ -16,10 +16,9 @@ Author:	    Daniel Harris
 
 /*
 	TODO:
-	() Populate clientLookup in becomeMaster
-	() Add endpoint that updates clientLookup without replying to user (If that is faster, if not dont bother)
 	() Allow Master endpoints to be called using device IPs as well as Names (Will fix the issue of 2 devices having the same name)
 
+	() Find a way of refreshing clientLookup without removing master from it (No need to remove master)
 	() Make sure all included libraries are needed/used
 	() Try to reduce the sleep timers to make things faster
 	() Make SSID a drop down menu in config site
@@ -32,6 +31,9 @@ Author:	    Daniel Harris
 	() If ESP does not reply when Master is doing get devices, then remove that ESP from connectedClients
 	() Add master to its own connectedClients or master can not be accessed
 	() Be able to change the name of the master ESP (Maybe see if the client server can be run at the same time as master?)
+	() Populate clientLookup in becomeMaster
+	() Restructure master endpoints to check IP first and not during the sending
+	() Add endpoint that updates clientLookup without replying to user (If that is faster, if not dont bother)
 
 */
 
@@ -52,6 +54,8 @@ typedef struct ReturnInfo {
 	String body = "";
 };
 
+int lookupCountdownMax = 100000;
+int lookupCountdown = lookupCountdownMax;
 std::vector<Device> clientLookup;
 
 //Declareing functions
@@ -67,7 +71,6 @@ String postByName(String name, String path, t_http_codes expectedCode, JsonObjec
 String clientGetInfo();
 ReturnInfo clientSetDevice(String inputStr);
 
-//Update these numbers per each device ***************************
 const int MASTER_PORT = 235;
 const char* SETUP_SSID = "ESP-REST-V3";
 const char* SETUP_PASSWORD = "zJ2f5xSX";
@@ -76,8 +79,6 @@ const char* SETUP_PASSWORD = "zJ2f5xSX";
 IPAddress STATIC_IP(192, 168, 1, 100);
 IPAddress GATEWAY(192, 168, 1, 254);
 IPAddress SUBNET(255, 255, 255, 0);
-//Update these numbers per each device ***************************
-
 
 int gpioPin = 0;
 bool gpioPinState = false;
@@ -160,6 +161,14 @@ void loop() {
 
 		if (isMaster == true) {
 			masterServer.handleClient();
+
+			if (lookupCountdown != 0) {
+				lookupCountdown--;
+			}
+			else {
+				lookupCountdown = lookupCountdownMax;
+				refreshLookup();
+			}
 		}
 		else {
 			clientServer.handleClient();
@@ -339,6 +348,8 @@ bool becomeMaster() {
 
 		masterServer.onNotFound(handleMasterUnknown);
 		masterServer.begin();
+
+		refreshLookup();
 	}
 	else {
 		Serial.println("becomeMaster failed, master already exists");
@@ -351,8 +362,8 @@ bool becomeMaster() {
 void handleMasterGetWiFiInfo() {
 	Serial.println("Entering handleMasterGetWiFiInfo");
 
-	DynamicJsonBuffer outputBuffer;
-	JsonObject& output = outputBuffer.createObject();
+	DynamicJsonBuffer jsonBuffer;
+	JsonObject& output = jsonBuffer.createObject();
 
 	WiFiInfo info = loadWiFiCredentials();
 	output["ssid"] = info.ssid;
@@ -367,59 +378,21 @@ void handleMasterGetWiFiInfo() {
 void handleMasterGetDevices() {
 	Serial.println("Entering handleMasterGetDevices");
 
-	DynamicJsonBuffer outputBuffer;
-	JsonObject& output = outputBuffer.createObject();
+	DynamicJsonBuffer jsonBuffer;
+	JsonObject& output = jsonBuffer.createObject();
 	JsonArray& devices = output.createNestedArray("devices");
 
-	Serial.println("Sending mDNS query");
-	int amountOfDevicesFound = MDNS.queryService(MDNS_ID, "tcp"); // Send out query for esp tcp services
-	Serial.println("mDNS query done");
+	for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
+		Device device = *it;
 
-	//Clears known clients/devices ready to repopulate the vector
-	clientLookup.clear();
-
-	//Adds master (itself) to clientLookup
-	WiFiInfo info = loadWiFiCredentials();
-	Device myself;
-	myself.name = info.name;
-	myself.ip = WiFi.localIP().toString();
-	clientLookup.push_back(myself);
-
-	//Adds master (itself) to returning json array
-	DynamicJsonBuffer masterInputBuffer;
-	JsonObject& masterInput = masterInputBuffer.parseObject(clientGetInfo());
-	devices.add(masterInput);
-
-	if (amountOfDevicesFound == 0) {
-		Serial.println("no services found");
-	}
-	else {
-		Serial.print(amountOfDevicesFound);
-		Serial.println(" service(s) found");
-		for (int i = 0; i < amountOfDevicesFound; ++i) {
-
-			//Prints details for each service found
-			Serial.print(i + 1);
-			Serial.print(": ");
-			Serial.print(MDNS.hostname(i));
-			Serial.print(" (");
-			Serial.print(MDNS.IP(i));
-			Serial.println(")");
-
-			//Call the device's IP and get its info
-			String ip = MDNS.IP(i).toString();
-			String reply = getByIP(ip, "/device", HTTP_CODE_OK);
-
+		if (isMyIp(device.ip) == true) {
+			JsonObject& masterInput = jsonBuffer.parseObject(clientGetInfo());
+			devices.add(masterInput);
+		}
+		else {
+			String reply = getByIP(device.ip, "/device", HTTP_CODE_OK);
 			if (reply.equals("error") == false) {
-				DynamicJsonBuffer intputBuffer;
-				JsonObject& input = intputBuffer.parseObject(reply);
-
-				Device newDevice;
-				String name = input["name"];
-				newDevice.ip = ip;
-				newDevice.name = name;
-
-				clientLookup.push_back(newDevice);
+				JsonObject& input = jsonBuffer.parseObject(reply);
 				devices.add(input);
 			}
 		}
@@ -440,35 +413,37 @@ void handleMasterSetDevice() {
 		return;
 	}
 
+	DynamicJsonBuffer jsonBuffer;
+
 	//Get json from caller
-	DynamicJsonBuffer intputBuffer;
-	JsonObject& input = intputBuffer.parseObject(masterServer.arg("plain"));
+	JsonObject& input = jsonBuffer.parseObject(masterServer.arg("plain"));
 	String name = input["name"];
 	String action = input["action"];
 	bool powered = input["power"];
 
 	//Prep json to send from master to client
-	DynamicJsonBuffer outputBuffer;
-	JsonObject& output = outputBuffer.createObject();
+	JsonObject& output = jsonBuffer.createObject();
 	output["action"] = action;
 	output["power"] = powered;
 
-	String reply = postByName(name, "/device", HTTP_CODE_OK, output);
-
-	if (reply.equals("myself") == true) {
+	if (isMyName(name) == true) {
 		String result;
 		output.printTo(result);
 
 		ReturnInfo returnInfo = clientSetDevice(result);
 		masterServer.send(returnInfo.code, "application/json", returnInfo.body);
 	}
-	else if (reply.equals("error") == false) {
-		//Sends json from client to caller
-		masterServer.send(HTTP_CODE_OK, "application/json", reply);
-	}
 	else {
-		//If cant reach client, reply to caller with error
-		masterServer.send(HTTP_CODE_BAD_GATEWAY, "application/json");
+		String reply = postByName(name, "/device", HTTP_CODE_OK, output);
+
+		if (reply.equals("error") == false) {
+			//Sends json from client to caller
+			masterServer.send(HTTP_CODE_OK, "application/json", reply);
+		}
+		else {
+			//If cant reach client, reply to caller with error
+			masterServer.send(HTTP_CODE_BAD_GATEWAY, "application/json");
+		}
 	}
 }
 
@@ -481,30 +456,32 @@ void handleMasterSetDeviceName() {
 		return;
 	}
 
+	DynamicJsonBuffer jsonBuffer;
+
 	//Get json from caller
-	DynamicJsonBuffer intputBuffer;
-	JsonObject& input = intputBuffer.parseObject(masterServer.arg("plain"));
+	JsonObject& input = jsonBuffer.parseObject(masterServer.arg("plain"));
 	String oldName = input["old_name"];
 	String newName = input["new_name"];
 
-	//Prep json to send from master to client
-	DynamicJsonBuffer outputBuffer;
-	JsonObject& output = outputBuffer.createObject();
-	output["new_name"] = newName;
-
-	String reply = postByName(oldName, "/name", HTTP_CODE_OK, output);
-
-	if (reply.equals("myself") == true) {
+	if (isMyName(oldName) == true) {
 		clientSetName(newName);
 		masterServer.send(HTTP_CODE_OK, "application/json");
 	}
-	else if (reply.equals("error") == false) {
-		//Sends json from client to caller
-		masterServer.send(HTTP_CODE_OK, "application/json");
-	}
 	else {
-		//If cant reach client, reply to caller with error
-		masterServer.send(HTTP_CODE_BAD_GATEWAY, "application/json");
+		//Prep json to send from master to client
+		JsonObject& output = jsonBuffer.createObject();
+		output["new_name"] = newName;
+
+		String reply = postByName(oldName, "/name", HTTP_CODE_OK, output);
+
+		if (reply.equals("error") == false) {
+			//Sends json from client to caller
+			masterServer.send(HTTP_CODE_OK, "application/json");
+		}
+		else {
+			//If cant reach client, reply to caller with error
+			masterServer.send(HTTP_CODE_BAD_GATEWAY, "application/json");
+		}
 	}
 }
 
@@ -549,8 +526,8 @@ bool getAndSaveMainWiFiInfo() {
 	if (http.GET() == HTTP_CODE_OK) {
 		String payload = http.getString();
 
-		DynamicJsonBuffer intputBuffer;
-		JsonObject& input = intputBuffer.parseObject(payload);
+		DynamicJsonBuffer jsonBuffer;
+		JsonObject& input = jsonBuffer.parseObject(payload);
 		String ssid = input["ssid"];
 		String password = input["password"];
 
@@ -576,8 +553,8 @@ void handleClientGetInfo() {
 String clientGetInfo() {
 	Serial.println("Entering clientGetInfo");
 
-	DynamicJsonBuffer outputBuffer;
-	JsonObject& output = outputBuffer.createObject();
+	DynamicJsonBuffer jsonBuffer;
+	JsonObject& output = jsonBuffer.createObject();
 
 	WiFiInfo info = loadWiFiCredentials();
 	output["name"] = info.name;
@@ -606,8 +583,8 @@ void handleClientSetDevice() {
 ReturnInfo clientSetDevice(String inputStr) {
 	Serial.println("Entering clientSetDevice");
 
-	DynamicJsonBuffer intputBuffer;
-	JsonObject& input = intputBuffer.parseObject(inputStr);
+	DynamicJsonBuffer jsonBuffer;
+	JsonObject& input = jsonBuffer.parseObject(inputStr);
 
 	bool lastState = gpioPinState;
 
@@ -638,8 +615,7 @@ ReturnInfo clientSetDevice(String inputStr) {
 		return returnInfo;
 	}
 
-	DynamicJsonBuffer outputBuffer;
-	JsonObject& output = outputBuffer.createObject();
+	JsonObject& output = jsonBuffer.createObject();
 
 	output["power"] = gpioPinState;
 	output["last_state"] = lastState;
@@ -662,8 +638,8 @@ void handleClientSetName() {
 		return;
 	}
 
-	DynamicJsonBuffer intputBuffer;
-	JsonObject& input = intputBuffer.parseObject(clientServer.arg("plain"));
+	DynamicJsonBuffer jsonBuffer;
+	JsonObject& input = jsonBuffer.parseObject(clientServer.arg("plain"));
 	String newName = input["new_name"];
 
 	clientSetName(newName);
@@ -765,7 +741,7 @@ void saveWiFiCredentials(String ssidStr, String passwordStr, String nameStr) {
 }
 
 WiFiInfo loadWiFiCredentials() {
-	Serial.println("Entering loadWiFiCredentials");
+	//Serial.println("Entering loadWiFiCredentials");
 
 	char ssid[32] = "";
 	char password[32] = "";
@@ -825,10 +801,6 @@ String getByName(String name, String path, t_http_codes expectedCode) {
 }
 
 String getByIP(String ip, String path, t_http_codes expectedCode) {
-	if (ip.equals(WiFi.localIP().toString()) == true) {
-		return "myself";
-	}
-	
 	String url = "http://" + ip + ":80" + path;
 
 	HTTPClient http;
@@ -854,10 +826,6 @@ String postByName(String name, String path, t_http_codes expectedCode, JsonObjec
 }
 
 String postByIP(String ip, String path, t_http_codes expectedCode, JsonObject& jsonObject) {
-	if (ip.equals(WiFi.localIP().toString()) == true) {
-		return "myself";
-	}
-
 	String url = "http://" + ip + ":80" + path;
 
 	String payload;
@@ -879,6 +847,58 @@ String postByIP(String ip, String path, t_http_codes expectedCode, JsonObject& j
 
 	return toReturn;
 }
+
+void refreshLookup() {
+	//Serial.println("Entering refreshLookup");
+
+	//Clears known clients ready to repopulate the vector
+	clientLookup.clear();
+
+	//Adds master (itself) to clientLookup
+	WiFiInfo info = loadWiFiCredentials();
+	Device myself;
+	myself.name = info.name;
+	myself.ip = WiFi.localIP().toString();
+	clientLookup.push_back(myself);
+
+	// Send out query for ESP_REST_V3 devices
+	int devicesFound = MDNS.queryService(MDNS_ID, "tcp");
+	for (int i = 0; i < devicesFound; ++i) {
+		//Prints details for each service found
+		//Serial.print(i + 1);
+		//Serial.print(": ");
+		//Serial.print(MDNS.hostname(i));
+		//Serial.print(" (");
+		//Serial.print(MDNS.IP(i));
+		//Serial.println(")");
+
+		//Call the device's IP and get its info
+		String ip = MDNS.IP(i).toString();
+		String reply = getByIP(ip, "/device", HTTP_CODE_OK);
+
+		if (reply.equals("error") == false) {
+			DynamicJsonBuffer jsonBuffer;
+			JsonObject& input = jsonBuffer.parseObject(reply);
+
+			Device newDevice;
+			String name = input["name"];
+			newDevice.ip = ip;
+			newDevice.name = name;
+
+			clientLookup.push_back(newDevice);
+		}
+	}
+}
+
+bool isMyIp(String ip) {
+	return ip.equals( WiFi.localIP().toString() );
+}
+
+bool isMyName(String name) {
+	String ip = getDeviceIPFromName(name);
+	return isMyIp(ip);
+}
+
 
 //Power control
 void power_toggle() {
