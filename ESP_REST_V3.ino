@@ -4,9 +4,7 @@ Created:	05/08/2018 07:48:35 PM
 Author:	    Daniel Harris
 */
 
-#include <vector>
 #include <EEPROM.h>
-#include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPClient.h>
@@ -17,11 +15,8 @@ Author:	    Daniel Harris
 /*
 	TODO:
 	() Allow Master endpoints to be called using device IPs as well as Names (Will fix the issue of 2 devices having the same name)
-
 	() Find a way of refreshing clientLookup without removing master from it (No need to remove master)
-	() Make sure all included libraries are needed/used
 	() Try to reduce the sleep timers to make things faster
-	() Make SSID a drop down menu in config site
 	() Look into implementing SmartConfig to connect devices to router
 	() Add functionality for custom circuit board and input detection (Like PC's ESP)
 	() Dont run turn on function if already on, and dont run turn off function if already off
@@ -34,6 +29,8 @@ Author:	    Daniel Harris
 	() Populate clientLookup in becomeMaster
 	() Restructure master endpoints to check IP first and not during the sending
 	() Add endpoint that updates clientLookup without replying to user (If that is faster, if not dont bother)
+	() Make sure all included libraries are needed/used
+	() Make SSID a drop down menu in config site
 
 */
 
@@ -251,15 +248,20 @@ void handleConfig() {
 
 	WiFiInfo info = loadWiFiCredentials();
 
-	String ssid = info.ssid;
+	//String ssid = info.ssid;
 	String password = info.password;
 	String name = info.name;
+
+	String options = makeOptionsSSID();
 
 	String content;
 	content += "<html><body>";
 
 	content += "<form action='/connect' method='POST'>Log in to Voice Controler:<br>";
-	content += "SSID:          <input type='text' name='SSID' placeholder='ssid found on router' value='" + ssid + "'><br>";
+	//content += "SSID:          <input type='text' name='SSID' placeholder='ssid found on router' value='" + ssid + "'><br>";
+
+	content += "SSID:          <select name='SSID'>" + options + "</select><br>";
+
 	content += "Password:      <input type='password' name='PASSWORD' placeholder='password found on router' value='" + password + "'><br>";
 	content += "Device Name:   <input type='text' name='NAME' placeholder='device name' value='" + name + "'><br>";
 	content += "<input type='submit' value='Connect'></form><br><br>";
@@ -294,6 +296,8 @@ void handleConnect() {
 
 		delay(1000);
 
+		configMode = false;
+
 		saveWiFiCredentials(strSsid, strPassword, strName);
 		setup();
 	}
@@ -304,6 +308,19 @@ void handleConnect() {
 		content += "</body></html>";
 		setupServer.send(HTTP_CODE_OK, "text/html", content);
 	}
+}
+
+String makeOptionsSSID() {
+	String returnOptions = "";
+
+	int networksFound = WiFi.scanNetworks();
+	for (int i = 0; i < networksFound; i++)
+	{
+		String ssid = WiFi.SSID(i).c_str();
+		returnOptions += "<option value = '" + ssid + "'>" + ssid + "</option>";
+	}
+
+	return returnOptions;
 }
 
 
