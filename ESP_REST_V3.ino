@@ -14,6 +14,9 @@ Author:	    Daniel Harris
 
 /*
 	TODO:
+	() Add apidoc for endpoints
+	() Add functionality to make clients automaticly become master if master gets disconnected
+
 	() Allow Master endpoints to be called using device IPs as well as Names (Will fix the issue of 2 devices having the same name)
 	() Find a way of refreshing clientLookup without removing master from it (No need to remove master)
 	() Try to reduce the sleep timers to make things faster
