@@ -4,14 +4,17 @@ Created:	05/08/2018 07:48:35 PM
 Author:	    Daniel Harris
 */
 
-#include "Persistent_Store.h"
-#include "WiFi_Mode.h"
-#include "Config.h"
-#include "Client.h"
-#include "Master.h"
+#include "ESP_Device.h"
 
 
 /*
+
+	checkIn is to be used to:
+		In Master = Refresh clients
+		In Client = Check master exists
+		In Config = Check if master has become available
+
+
 	Higher TODO:
 	() Move function into classes and rework design
 		(#) Create class for client
@@ -22,6 +25,7 @@ Author:	    Daniel Harris
 	() Add functionality to make clients automaticly become master if master gets disconnected
 
 	Lower TODO:
+	() Do something about lookupCountdown and lookupCountdownMax. There must be a better way
 	() Recreate SimpleSchema for C++ to validate Json input!
 	() Update config to allow manual SSID to be entered if none found
 	() Add apidoc for endpoints
@@ -48,17 +52,10 @@ Author:	    Daniel Harris
 	* = Finished
 */
 
-int lookupCountdownMax = 100000;
-int lookupCountdown = lookupCountdownMax;
-
-
-const int MASTER_PORT = 235;
-
 int gpioPin = 0;
 bool gpioPinState = false;
-bool configMode = false;
-bool isMaster = false;
 
+ESP_Device thisDevice;
 
 void setup() {
 	Serial.begin(19200);
@@ -72,98 +69,9 @@ void setup() {
 	//saveWiFiCredentials("", "", "");
 	//saveWiFiCredentials("BOB", "BOB", "BOB");
 
-	boot();
-}
-
-void boot() {
-	ESP_Device thisDevice();
-
-
-	//Make sure all WiFi and servers are off
-	WiFi.softAPdisconnect(true);
-	WiFi.disconnect(true);
-
-	WiFi.mode(WIFI_STA);
-	delay(500);
-
-	Config configMode;
-	bool masterFound = configMode.lookForMaster();
-
-	//If master found: connect
-	if (masterFound == true) {
-		if (configMode.connectToWiFi(masterInfo, WIFI_STA) == true) {
-			configMode.~WiFi_Mode();
-			if (configMode.getAndSaveMainWiFiInfo() == true) {
-				if (current_mode.connectToWiFi(loadWiFiCredentials(), WIFI_STA) == true) {
-					
-					Client clientMode;
-					current_mode = new Client();
-					enableOTAUpdates();
-				}
-				else { setup(); }
-			}
-			else { setup(); }
-		}
-		else { setup(); }
-	}
-	//If not: try to remember WiFi. If not: enter WiFi config mode. Then become master
-	else {
-		if (rememberWiFiSettings() == true) {
-			if (becomeMaster() == true) {
-				enableOTAUpdates();
-			}
-			else { enterConfigMode(); }
-		}
-		else { enterConfigMode(); }
-	}
+	thisDevice.startDevice();
 }
 
 void loop() {
-	if (configMode == true) {
-		if (findMaster()) setup();
-
-		setupServer.handleClient();
-	}
-	else {
-		ArduinoOTA.handle();
-
-		if (isMaster == true) {
-			masterServer.handleClient();
-
-			if (lookupCountdown != 0) {
-				lookupCountdown--;
-			}
-			else {
-				lookupCountdown = lookupCountdownMax;
-				refreshLookup();
-			}
-		}
-		else {
-			clientServer.handleClient();
-		}
-	}
-}
-
-
-bool rememberWiFiSettings(WiFi_Mode mode) {
-	Serial.println("Entering rememberWiFiSettings");
-
-	WiFiInfo info = new Persistent_Store->loadWiFiCredentials();
-
-	if (info.ssid != "" && info.password != "" && info.name != "") {
-		return true;
-	}
-	else {
-		return false;
-	}
-}
-
-
-
-void enableOTAUpdates() {
-	Serial.println("Entering enableOTAUpdates");
-
-	ArduinoOTA.setHostname("ESP8266");
-	//ArduinoOTA.setPassword("esp8266");
-	ArduinoOTA.begin();
+	thisDevice.handle();
 }

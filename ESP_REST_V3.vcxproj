@@ -84,11 +84,22 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Client.h" />
+    <ClInclude Include="Client_Mode.h" />
+    <ClInclude Include="Config_Mode.h" />
+    <ClInclude Include="ESP_Device.h" />
+    <ClInclude Include="http_execute.h" />
+    <ClInclude Include="Master_Mode.h" />
+    <ClInclude Include="Persistent_Store.h" />
+    <ClInclude Include="WiFi_Mode.h" />
     <ClInclude Include="__vm\.ESP_REST_V3.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Client.cpp" />
+    <ClCompile Include="Client_Mode.cpp" />
+    <ClCompile Include="Config_Mode.cpp" />
+    <ClCompile Include="ESP_Device.cpp" />
+    <ClCompile Include="http_execute.cpp" />
+    <ClCompile Include="Master_Mode.cpp" />
+    <ClCompile Include="Persistent_Store.cpp" />
   </ItemGroup>
   <PropertyGroup>
     <DebuggerFlavor>VisualMicroDebugger</DebuggerFlavor>
