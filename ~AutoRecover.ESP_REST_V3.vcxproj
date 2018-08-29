@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{BB121E79-7E32-485D-A8F6-745DD1F46537}</ProjectGuid>
+    <RootNamespace>
+    </RootNamespace>
+    <ProjectName>ESP_REST_V3</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>
+    </PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>
+    </PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\ESP_REST_V3;$(ProjectDir)..\libraries\ArduinoJson\src;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ArduinoOTA;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\EEPROM;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266mDNS;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WebServer\src;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src;$(ProjectDir)..\..\..\Program Files (x86)\Arduino\libraries;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries;$(ProjectDir)..\libraries;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266\libb64;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266\spiffs;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266\umm_malloc;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\variants\generic;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\tools\sdk\include;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\tools\sdk\lwip2\include;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\tools\sdk\libc\xtensa-lx106-elf\include;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\tools\xtensa-lx106-elf-gcc\1.20.0-26-gb404fb9-2\xtensa-lx106-elf\include\c++\4.8.2;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\tools\xtensa-lx106-elf-gcc\1.20.0-26-gb404fb9-2\xtensa-lx106-elf\include\c++\4.8.2\xtensa-lx106-elf;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\tools\xtensa-lx106-elf-gcc\1.20.0-26-gb404fb9-2\xtensa-lx106-elf\include;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\tools\xtensa-lx106-elf-gcc\1.20.0-26-gb404fb9-2\lib\gcc\xtensa-lx106-elf\4.8.2\include;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\tools\sdk\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>$(ProjectDir)__vm\.ESP_REST_V3.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <PreprocessorDefinitions>__ESP8266_ESp8266__;__ESP8266_ESP8266__;_VMDEBUG=1;__ets__;ICACHE_FLASH;F_CPU=80000000L;LWIP_OPEN_SRC;TCP_MSS=536;ARDUINO=10805;ARDUINO_ESP8266_GENERIC;ARDUINO_ARCH_ESP8266;LED_BUILTIN=2;ESP8266;__cplusplus=201103L;_VMICRO_INTELLISENSE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>\\192.168.1.103\full_4_drive_raid_10\Coding\Arduino\ESP_REST_V3;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\EEPROM;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WebServer\src;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266mDNS;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266HTTPClient\src;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ArduinoOTA;\\192.168.1.103\full_4_drive_raid_10\Coding\C++\arduino\libraries\ArduinoJson\src;D:\Program Files (x86)\Arduino\libraries;\\192.168.1.103\full_4_drive_raid_10\Coding\C++\arduino\libraries;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266\libb64;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266\spiffs;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266\umm_malloc;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\variants\generic;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\tools\sdk\include;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\tools\sdk\lwip2\include;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\tools\sdk\libc\xtensa-lx106-elf\include;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\tools\xtensa-lx106-elf-gcc\1.20.0-26-gb404fb9-2\xtensa-lx106-elf\include\c++\4.8.2;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\tools\xtensa-lx106-elf-gcc\1.20.0-26-gb404fb9-2\xtensa-lx106-elf\include\c++\4.8.2\xtensa-lx106-elf;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\tools\xtensa-lx106-elf-gcc\1.20.0-26-gb404fb9-2\xtensa-lx106-elf\include;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\tools\xtensa-lx106-elf-gcc\1.20.0-26-gb404fb9-2\lib\gcc\xtensa-lx106-elf\4.8.2\include;C:\Users\Daniel%27s Gaming PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\tools\sdk\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>\\192.168.1.103\full_4_drive_raid_10\Coding\Arduino\ESP_REST_V3\__vm\.ESP_REST_V3.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <PreprocessorDefinitions>__ESP8266_ESp8266__;__ESP8266_ESP8266__;__ets__;ICACHE_FLASH;F_CPU=80000000L;LWIP_OPEN_SRC;TCP_MSS=536;ARDUINO=10805;ARDUINO_ESP8266_GENERIC;ARDUINO_ARCH_ESP8266;LED_BUILTIN=2;ESP8266;__cplusplus=201103L;_VMICRO_INTELLISENSE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="VisualMicro" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ESP_REST_V3.ino">
+      <FileType>CppCode</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Client.h" />
+    <ClInclude Include="Config.h" />
+    <ClInclude Include="ESP_Device.h" />
+    <ClInclude Include="http_execute.h" />
+    <ClInclude Include="Master.h" />
+    <ClInclude Include="Persistent_Store.h" />
+    <ClInclude Include="WiFi_Mode.h" />
+    <ClInclude Include="__vm\.ESP_REST_V3.vsarduino.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Client.cpp" />
+    <ClCompile Include="Config.cpp" />
+    <ClCompile Include="ESP_Device.cpp" />
+    <ClCompile Include="http_execute.cpp" />
+    <ClCompile Include="Master.cpp" />
+    <ClCompile Include="Persistent_Store.cpp" />
+  </ItemGroup>
+  <PropertyGroup>
+    <DebuggerFlavor>VisualMicroDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties debug.view.AnalogPins="" arduino.upload.port="COM3" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>
