@@ -6,7 +6,6 @@
 #include <ArduinoOTA.h>
 #include <ArduinoJson.h>
 
-
 typedef struct WiFiInfo {
 	char ssid[32] = "";
 	char password[32] = "";
@@ -41,7 +40,7 @@ String clientGetInfo();
 ReturnInfo clientSetDevice(String inputStr);
 
 const int MASTER_PORT = 235;
-const char* SETUP_SSID = "ESP-REST-V3";
+const char* SETUP_SSID = getDeviceHostName();
 const char* SETUP_PASSWORD = "zJ2f5xSX";
 
 //Config for when master connects to WiFi
@@ -69,6 +68,7 @@ const char* MASTER_NAME = "esp8266";
 void setup() {
 	Serial.println("Entering setup");
 
+	//Sets the ESP's output pin to OFF
 	pinMode(gpioPin, OUTPUT);
 	digitalWrite(gpioPin, HIGH);
 
@@ -136,6 +136,22 @@ void loop() {
 		}
 		else {
 			clientServer.handleClient();
+			if (lookupCountdown != 0) {
+				lookupCountdown--;
+			}
+			else {
+				lookupCountdown = lookupCountdownMax;
+				if (findMaster() == false) {
+					if (electNewMaster() == true) {
+						Serial.print("I am new master!");
+						setup();
+					}
+					else {
+						Serial.print("I am not the new master");
+						delay(20000); //Waits for 20 seconds for new master to connect
+					}
+				}
+			}
 		}
 	}
 }
@@ -185,6 +201,7 @@ bool rememberWiFiSettings() {
 }
 
 
+
 //Config
 void enterConfigMode() {
 	Serial.println("Entering config mode");
@@ -225,7 +242,6 @@ void handleConfig() {
 	content += "<html><body>";
 
 	content += "<form action='/connect' method='POST'>Log in to Voice Controler:<br>";
-	//content += "SSID:          <input type='text' name='SSID' placeholder='ssid found on router' value='" + ssid + "'><br>";
 
 	content += "SSID:          <select name='SSID'>" + options + "</select><br>";
 
@@ -289,6 +305,7 @@ String makeOptionsSSID() {
 
 	return returnOptions;
 }
+
 
 
 //Master functions
@@ -376,8 +393,7 @@ void handleMasterGetDevices() {
 		else {
 			String reply = getByIP(device.ip, "/device", HTTP_CODE_OK);
 			if (reply.equals("error") == false) {
-				JsonObject& input = jsonBuffer.parseObject(reply);
-				devices.add(input);
+				devices.add(jsonBuffer.parseObject(reply));
 			}
 		}
 	}
@@ -418,7 +434,7 @@ void handleMasterSetDevice() {
 		masterServer.send(returnInfo.code, "application/json", returnInfo.body);
 	}
 	else {
-		String reply = postByName(name, "/device", HTTP_CODE_OK, output);
+		String reply = -(name, "/device", HTTP_CODE_OK, output);
 
 		if (reply.equals("error") == false) {
 			//Sends json from client to caller
@@ -477,14 +493,17 @@ void handleMasterUnknown() {
 }
 
 
+
 //Client functions
 bool startClient() {
 	Serial.println("Entering startClient");
 
 	//Starts up MDNS
 	char hostString[16] = { 0 };
-	sprintf(hostString, "ESP_%06X", ESP.getChipId());
+	strcat(hostString, getDeviceHostName());
 	MDNS.begin(hostString);
+
+	Serial.println(hostString);
 
 	//Broadcasts IP so can be seen by master
 	MDNS.addService(MDNS_ID, "tcp", 80);
@@ -643,6 +662,30 @@ void handleClientUnknown() {
 	clientServer.send(404);
 }
 
+bool electNewMaster() {
+	Serial.print("Entering electNewMaster");
+	//Initalises the chosen host name to the host name of the current device
+	String myHostName = getDeviceHostName();
+
+	String chosenHostName = myHostName;
+
+	//Prints details for each service found
+	Serial.print("My host name: ");
+	Serial.print(chosenHostName);
+	Serial.print("Other host names: ");
+
+	//Send out query for ESP_REST devices
+	int devicesFound = MDNS.queryService(MDNS_ID, "tcp");
+	for (int i = 0; i < devicesFound; ++i) {
+		String currentHostName = MDNS.hostname(i);
+		if (currentHostName > chosenHostName) {
+			chosenHostName = currentHostName;
+		}
+		Serial.print(currentHostName);
+	}
+
+	return myHostName.equals(chosenHostName);
+}
 
 
 
@@ -725,8 +768,6 @@ void saveWiFiCredentials(String ssidStr, String passwordStr, String nameStr) {
 }
 
 WiFiInfo loadWiFiCredentials() {
-	//Serial.println("Entering loadWiFiCredentials");
-
 	char ssid[32] = "";
 	char password[32] = "";
 	char name[32] = "";
@@ -743,14 +784,6 @@ WiFiInfo loadWiFiCredentials() {
 		password[0] = 0;
 	}
 
-	//Serial.println("Recovered credentials:");
-	//Serial.print("SSID: ");
-	//Serial.println(ssid);
-	//Serial.print("Password: ");
-	//Serial.println(password);
-	//Serial.print("Name: ");
-	//Serial.println(name);
-
 	WiFiInfo info;
 	strcpy(info.ssid, ssid);
 	strcpy(info.password, password);
@@ -762,8 +795,8 @@ WiFiInfo loadWiFiCredentials() {
 void enableOTAUpdates() {
 	Serial.println("Entering enableOTAUpdates");
 
+	//Enabled "Over The Air" updates so that the ESPs can be updated remotely 
 	ArduinoOTA.setHostname("ESP8266");
-	//ArduinoOTA.setPassword("esp8266");
 	ArduinoOTA.begin();
 }
 
@@ -833,8 +866,6 @@ String postByIP(String ip, String path, t_http_codes expectedCode, JsonObject& j
 }
 
 void refreshLookup() {
-	//Serial.println("Entering refreshLookup");
-
 	//Clears known clients ready to repopulate the vector
 	clientLookup.clear();
 
@@ -845,17 +876,9 @@ void refreshLookup() {
 	myself.ip = WiFi.localIP().toString();
 	clientLookup.push_back(myself);
 
-	// Send out query for ESP_REST_V3 devices
+	//Send out query for ESP_REST devices
 	int devicesFound = MDNS.queryService(MDNS_ID, "tcp");
 	for (int i = 0; i < devicesFound; ++i) {
-		//Prints details for each service found
-		//Serial.print(i + 1);
-		//Serial.print(": ");
-		//Serial.print(MDNS.hostname(i));
-		//Serial.print(" (");
-		//Serial.print(MDNS.IP(i));
-		//Serial.println(")");
-
 		//Call the device's IP and get its info
 		String ip = MDNS.IP(i).toString();
 		String reply = getByIP(ip, "/device", HTTP_CODE_OK);
@@ -882,6 +905,16 @@ bool isMyName(String name) {
 	String ip = getDeviceIPFromName(name);
 	return isMyIp(ip);
 }
+
+char* getDeviceHostName() {
+	char* newName = "ESP_";
+	char hostName[10];
+	sprintf(hostName, "%d", ESP.getChipId());
+	strcat(newName, hostName);
+
+	return newName;
+}
+
 
 
 //Power control
