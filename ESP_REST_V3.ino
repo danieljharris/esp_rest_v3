@@ -6,6 +6,28 @@
 #include <ArduinoOTA.h>
 #include <ArduinoJson.h>
 
+/*
+	TODO:
+	() Add apidoc for endpoints
+	() Add functionality to make clients automaticly become master if master gets disconnected
+	() Allow Master endpoints to be called using device IPs as well as Names (Will fix the issue of 2 devices having the same name)
+	() Find a way of refreshing clientLookup without removing master from it (No need to remove master)
+	() Try to reduce the sleep timers to make things faster
+	() Look into implementing SmartConfig to connect devices to router
+	() Add functionality for custom circuit board and input detection (Like PC's ESP)
+	() Dont run turn on function if already on, and dont run turn off function if already off
+	() Try to move some of the functions to seperate files (Get practice with hearder files)
+	DONE:
+	() If ESP does not reply when Master is doing get devices, then remove that ESP from connectedClients
+	() Add master to its own connectedClients or master can not be accessed
+	() Be able to change the name of the master ESP (Maybe see if the client server can be run at the same time as master?)
+	() Populate clientLookup in becomeMaster
+	() Restructure master endpoints to check IP first and not during the sending
+	() Add endpoint that updates clientLookup without replying to user (If that is faster, if not dont bother)
+	() Make sure all included libraries are needed/used
+	() Make SSID a drop down menu in config site
+*/
+
 typedef struct WiFiInfo {
 	char ssid[32] = "";
 	char password[32] = "";
