@@ -456,7 +456,7 @@ void handleMasterSetDevice() {
 		masterServer.send(returnInfo.code, "application/json", returnInfo.body);
 	}
 	else {
-		String reply = -(name, "/device", HTTP_CODE_OK, output);
+		String reply = postByName(name, "/device", HTTP_CODE_OK, output);
 
 		if (reply.equals("error") == false) {
 			//Sends json from client to caller
