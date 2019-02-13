@@ -1,22 +1,15 @@
-/*
-Name:		ESP_REST_V3.ino
-Created:	05/08/2018 07:48:35 PM
-Author:	    Daniel Harris
-*/
-
 #include <EEPROM.h>
+#include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPClient.h>
 #include <ArduinoOTA.h>
 #include <ArduinoJson.h>
 
-
 /*
 	TODO:
 	() Add apidoc for endpoints
 	() Add functionality to make clients automaticly become master if master gets disconnected
-
 	() Allow Master endpoints to be called using device IPs as well as Names (Will fix the issue of 2 devices having the same name)
 	() Find a way of refreshing clientLookup without removing master from it (No need to remove master)
 	() Try to reduce the sleep timers to make things faster
@@ -24,7 +17,6 @@ Author:	    Daniel Harris
 	() Add functionality for custom circuit board and input detection (Like PC's ESP)
 	() Dont run turn on function if already on, and dont run turn off function if already off
 	() Try to move some of the functions to seperate files (Get practice with hearder files)
-
 	DONE:
 	() If ESP does not reply when Master is doing get devices, then remove that ESP from connectedClients
 	() Add master to its own connectedClients or master can not be accessed
@@ -34,9 +26,7 @@ Author:	    Daniel Harris
 	() Add endpoint that updates clientLookup without replying to user (If that is faster, if not dont bother)
 	() Make sure all included libraries are needed/used
 	() Make SSID a drop down menu in config site
-
 */
-
 
 typedef struct WiFiInfo {
 	char ssid[32] = "";
@@ -72,7 +62,7 @@ String clientGetInfo();
 ReturnInfo clientSetDevice(String inputStr);
 
 const int MASTER_PORT = 235;
-const char* SETUP_SSID = "ESP-REST-V3";
+const char* SETUP_SSID = getDeviceHostName();
 const char* SETUP_PASSWORD = "zJ2f5xSX";
 
 //Config for when master connects to WiFi
@@ -100,11 +90,7 @@ const char* MASTER_NAME = "esp8266";
 void setup() {
 	Serial.println("Entering setup");
 
-	//saveWiFiCredentials("PLUSNET-QJ75", "bf439b3bf2", "Master");
-	//saveWiFiCredentials("", "bf439b3bf2", "Master");
-	//saveWiFiCredentials("", "", "");
-	//saveWiFiCredentials("BOB", "BOB", "BOB");
-
+	//Sets the ESP's output pin to OFF
 	pinMode(gpioPin, OUTPUT);
 	digitalWrite(gpioPin, HIGH);
 
@@ -172,6 +158,22 @@ void loop() {
 		}
 		else {
 			clientServer.handleClient();
+			if (lookupCountdown != 0) {
+				lookupCountdown--;
+			}
+			else {
+				lookupCountdown = lookupCountdownMax;
+				if (findMaster() == false) {
+					if (electNewMaster() == true) {
+						Serial.print("I am new master!");
+						setup();
+					}
+					else {
+						Serial.print("I am not the new master");
+						delay(20000); //Waits for 20 seconds for new master to connect
+					}
+				}
+			}
 		}
 	}
 }
@@ -221,6 +223,7 @@ bool rememberWiFiSettings() {
 }
 
 
+
 //Config
 void enterConfigMode() {
 	Serial.println("Entering config mode");
@@ -261,7 +264,6 @@ void handleConfig() {
 	content += "<html><body>";
 
 	content += "<form action='/connect' method='POST'>Log in to Voice Controler:<br>";
-	//content += "SSID:          <input type='text' name='SSID' placeholder='ssid found on router' value='" + ssid + "'><br>";
 
 	content += "SSID:          <select name='SSID'>" + options + "</select><br>";
 
@@ -325,6 +327,7 @@ String makeOptionsSSID() {
 
 	return returnOptions;
 }
+
 
 
 //Master functions
@@ -412,8 +415,7 @@ void handleMasterGetDevices() {
 		else {
 			String reply = getByIP(device.ip, "/device", HTTP_CODE_OK);
 			if (reply.equals("error") == false) {
-				JsonObject& input = jsonBuffer.parseObject(reply);
-				devices.add(input);
+				devices.add(jsonBuffer.parseObject(reply));
 			}
 		}
 	}
@@ -513,14 +515,17 @@ void handleMasterUnknown() {
 }
 
 
+
 //Client functions
 bool startClient() {
 	Serial.println("Entering startClient");
 
 	//Starts up MDNS
 	char hostString[16] = { 0 };
-	sprintf(hostString, "ESP_%06X", ESP.getChipId());
+	strcat(hostString, getDeviceHostName());
 	MDNS.begin(hostString);
+
+	Serial.println(hostString);
 
 	//Broadcasts IP so can be seen by master
 	MDNS.addService(MDNS_ID, "tcp", 80);
@@ -679,6 +684,30 @@ void handleClientUnknown() {
 	clientServer.send(404);
 }
 
+bool electNewMaster() {
+	Serial.print("Entering electNewMaster");
+	//Initalises the chosen host name to the host name of the current device
+	String myHostName = getDeviceHostName();
+
+	String chosenHostName = myHostName;
+
+	//Prints details for each service found
+	Serial.print("My host name: ");
+	Serial.print(chosenHostName);
+	Serial.print("Other host names: ");
+
+	//Send out query for ESP_REST devices
+	int devicesFound = MDNS.queryService(MDNS_ID, "tcp");
+	for (int i = 0; i < devicesFound; ++i) {
+		String currentHostName = MDNS.hostname(i);
+		if (currentHostName > chosenHostName) {
+			chosenHostName = currentHostName;
+		}
+		Serial.print(currentHostName);
+	}
+
+	return myHostName.equals(chosenHostName);
+}
 
 
 
@@ -761,8 +790,6 @@ void saveWiFiCredentials(String ssidStr, String passwordStr, String nameStr) {
 }
 
 WiFiInfo loadWiFiCredentials() {
-	//Serial.println("Entering loadWiFiCredentials");
-
 	char ssid[32] = "";
 	char password[32] = "";
 	char name[32] = "";
@@ -779,14 +806,6 @@ WiFiInfo loadWiFiCredentials() {
 		password[0] = 0;
 	}
 
-	//Serial.println("Recovered credentials:");
-	//Serial.print("SSID: ");
-	//Serial.println(ssid);
-	//Serial.print("Password: ");
-	//Serial.println(password);
-	//Serial.print("Name: ");
-	//Serial.println(name);
-
 	WiFiInfo info;
 	strcpy(info.ssid, ssid);
 	strcpy(info.password, password);
@@ -798,8 +817,8 @@ WiFiInfo loadWiFiCredentials() {
 void enableOTAUpdates() {
 	Serial.println("Entering enableOTAUpdates");
 
+	//Enabled "Over The Air" updates so that the ESPs can be updated remotely 
 	ArduinoOTA.setHostname("ESP8266");
-	//ArduinoOTA.setPassword("esp8266");
 	ArduinoOTA.begin();
 }
 
@@ -869,8 +888,6 @@ String postByIP(String ip, String path, t_http_codes expectedCode, JsonObject& j
 }
 
 void refreshLookup() {
-	//Serial.println("Entering refreshLookup");
-
 	//Clears known clients ready to repopulate the vector
 	clientLookup.clear();
 
@@ -881,17 +898,9 @@ void refreshLookup() {
 	myself.ip = WiFi.localIP().toString();
 	clientLookup.push_back(myself);
 
-	// Send out query for ESP_REST_V3 devices
+	//Send out query for ESP_REST devices
 	int devicesFound = MDNS.queryService(MDNS_ID, "tcp");
 	for (int i = 0; i < devicesFound; ++i) {
-		//Prints details for each service found
-		//Serial.print(i + 1);
-		//Serial.print(": ");
-		//Serial.print(MDNS.hostname(i));
-		//Serial.print(" (");
-		//Serial.print(MDNS.IP(i));
-		//Serial.println(")");
-
 		//Call the device's IP and get its info
 		String ip = MDNS.IP(i).toString();
 		String reply = getByIP(ip, "/device", HTTP_CODE_OK);
@@ -918,6 +927,16 @@ bool isMyName(String name) {
 	String ip = getDeviceIPFromName(name);
 	return isMyIp(ip);
 }
+
+char* getDeviceHostName() {
+	char* newName = "ESP_";
+	char hostName[10];
+	sprintf(hostName, "%d", ESP.getChipId());
+	strcat(newName, hostName);
+
+	return newName;
+}
+
 
 
 //Power control
