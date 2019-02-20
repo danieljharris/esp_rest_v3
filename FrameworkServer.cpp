@@ -1,0 +1,47 @@
+#include "FrameworkServer.h"
+
+FrameworkServer::~FrameworkServer()
+{
+	stop();
+}
+
+void FrameworkServer::stop()
+{
+	Serial.println("Entering stop");
+
+	//server.client().stop();
+	server.close();
+	server.stop();
+}
+
+char* FrameworkServer::getDeviceHostName() {
+	char* newName = "ESP_";
+	char hostName[10];
+	sprintf(hostName, "%d", ESP.getChipId());
+	strcat(newName, hostName);
+
+	return newName;
+
+	//String strHostname = "ESP_" + (String)ESP.getChipId();
+	//char* hostname = const_cast<char*>(strHostname.c_str());
+	//return hostname;
+}
+
+void FrameworkServer::enableOTAUpdates() {
+	Serial.println("Entering enableOTAUpdates");
+
+	//Enabled "Over The Air" updates so that the ESPs can be updated remotely 
+	ArduinoOTA.setHostname(getDeviceHostName());
+	ArduinoOTA.begin();
+}
+
+void FrameworkServer::addUnknownEndpoint()
+{
+	auto handleUnknown = [=]() {
+		String UnknownUri = server.uri();
+		Serial.print("Unknown command: ");
+		Serial.println(UnknownUri);
+		server.send(HTTP_CODE_NOT_FOUND);
+	};
+	server.onNotFound(handleUnknown);
+}

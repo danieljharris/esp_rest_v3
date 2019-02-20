@@ -3,3 +3,17 @@ Debug
 Release
 ESP_REST_V3.vcxproj
 ESP_REST_V3.vcxproj.filters
+*.suo
+*.db
+*.db-shm
+*.db-wal
+*.bin
+*.cpp.d
+*.cpp.o
+*.elf
+*.buildinfo
+*.vcxproj
+*.filters
+*.xml
+*.sln
+*.user
