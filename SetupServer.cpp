@@ -6,6 +6,7 @@ bool SetupServer::start() {
 	WiFi.mode(WIFI_AP);
 	WiFi.softAP(SETUP_SSID, SETUP_PASSWORD);
 
+
 	addEndpoints();
 	addUnknownEndpoint();
 	server.begin(80);
@@ -16,7 +17,7 @@ void SetupServer::addEndpoints() {
 	std::function<void()> setupConnect = handleSetupConnect();
 
 	server.on("/", HTTP_GET, setupConfig);
-	server.on("/connect", HTTP_GET, setupConnect);
+	server.on("/connect", HTTP_ANY, setupConnect);
 }
 
 std::function<void()> SetupServer::handleSetupConfig() {
@@ -69,7 +70,7 @@ std::function<void()> SetupServer::handleSetupConnect() {
 			content += "</body></html>";
 			server.send(HTTP_CODE_OK, "text/html", content);
 
-			//delay(500);
+			delay(500);
 
 			stop();
 			WiFi.softAPdisconnect(true);
@@ -78,7 +79,7 @@ std::function<void()> SetupServer::handleSetupConnect() {
 			//delay(1000);
 
 			creds.save(strSsid, strPassword, strName);
-			reset();
+			ESP.restart();
 		}
 		else {
 			content += "<html><body>";

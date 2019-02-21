@@ -32,7 +32,7 @@ protected:
 	std::function<void()> handleClientSetName();
 	std::function<void()> handleClientSetWiFiCreds();
 
-	JsonObject& getDeviceInfo();
+	String getDeviceInfo();
 
 	const String MDNS_ID = "ESP_NETWORK";
 

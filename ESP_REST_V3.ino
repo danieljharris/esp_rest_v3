@@ -72,7 +72,6 @@ void setup() {
 	if (findAndConnectToMaster() == true) {
 			server = new ClientServer();
 			server->start();
-			Serial.println("left client start");
 	}
 	//If not: try to remember WiFi. If not: enter WiFi config mode. Then become master
 	else {

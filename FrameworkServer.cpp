@@ -37,11 +37,15 @@ void FrameworkServer::enableOTAUpdates() {
 
 void FrameworkServer::addUnknownEndpoint()
 {
-	auto handleUnknown = [=]() {
-		String UnknownUri = server.uri();
+	std::function<void()> lambda = [=]() {
+		Serial.println("");
 		Serial.print("Unknown command: ");
-		Serial.println(UnknownUri);
+		Serial.println(server.uri());
+
+		Serial.print("Method: ");
+		Serial.println(server.method());
+
 		server.send(HTTP_CODE_NOT_FOUND);
 	};
-	server.onNotFound(handleUnknown);
+	server.onNotFound(lambda);
 }

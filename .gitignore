@@ -1,6 +1,11 @@
-__vm
-Debug
-Release
+__vm/*
+Debug/*
+Release/*
+.vs/*
+__vm/
+Debug/
+Release/
+.vs/
 ESP_REST_V3.vcxproj
 ESP_REST_V3.vcxproj.filters
 *.suo
