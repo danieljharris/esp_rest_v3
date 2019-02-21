@@ -208,8 +208,8 @@ String MasterServer::getDeviceIPFromIdOrName(String idOrName) {
 	for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
 		Device device = *it;
 
-		if (device.id.equals(idOrName) == true) return device.ip;
-		else if (device.name.equals(idOrName) == true) return device.ip;
+		if (device.id.equals(idOrName)) return device.ip;
+		else if (device.name.equals(idOrName)) return device.ip;
 	}
 	return "not_found";
 }
