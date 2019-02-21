@@ -193,11 +193,9 @@ void MasterServer::refreshLookup() {
 			JsonObject& input = jsonBuffer.parseObject(reply);
 
 			Device newDevice;
-			String id = input["id"];
-			String name = input["name"];
 			newDevice.ip = ip;
-			newDevice.id = id;
-			newDevice.name = name;
+			newDevice.id = input["id"].asString();
+			newDevice.name = input["name"].asString();
 
 			clientLookup.push_back(newDevice);
 		}
@@ -206,12 +204,12 @@ void MasterServer::refreshLookup() {
 	Serial.println("Leaving refreshLookup");
 }
 
-String MasterServer::getDeviceIPFromId(String id) {
+String MasterServer::getDeviceIPFromIdOrName(String idOrName) {
 	for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
 		Device device = *it;
 
-		if (device.id.equals(id) == true) return device.ip;
-		else if (device.name.equals(id) == true) return device.ip;
+		if (device.id.equals(idOrName) == true) return device.ip;
+		else if (device.name.equals(idOrName) == true) return device.ip;
 	}
 	return "not_found";
 }
@@ -221,10 +219,13 @@ String MasterServer::reDirect(t_http_codes expectedCodeReply) {
 
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject& json = jsonBuffer.parseObject(payload);
-	String id = json["id"];
 
-	String ip = getDeviceIPFromId(id);
-	if (ip == "not_found") return "{\"error\":\"id_not_found\"}";
+	String idOrName = "";
+	if (json.containsKey("id")) idOrName = json["id"].asString();
+	else if (json.containsKey("name")) idOrName = json["name"].asString();
+
+	String ip = getDeviceIPFromIdOrName(idOrName);
+	if (ip == "not_found") return "{\"error\":\"id_or_name_not_found\"}";
 	else return reDirect(expectedCodeReply, ip);
 }
 

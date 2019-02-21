@@ -39,7 +39,7 @@ private:
 	void refreshLookup();
 	std::vector<Device> clientLookup;
 
-	String getDeviceIPFromId(String name);
+	String getDeviceIPFromIdOrName(String idOrName);
 	String reDirect(t_http_codes expectedCodeReply);
 	String reDirect(t_http_codes expectedCodeReply, String ip);
 	const char* strMethod();
