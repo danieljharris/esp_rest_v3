@@ -17,7 +17,6 @@
 class FrameworkServer {
 protected:
 	ESP8266WebServer server;
-	void(*reset) (void) = 0; //This function restarts the ESP
 
 	WiFiCredentials creds;
 

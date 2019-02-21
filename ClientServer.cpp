@@ -14,14 +14,17 @@ bool ClientServer::start() {
 	//Broadcasts IP so can be seen by other devices
 	MDNS.addService(MDNS_ID, "tcp", 80);
 
-	Serial.println("Adding endpoints...");
-	addEndpoints();
-	Serial.println("Adding unknown endpoint...");
-	addUnknownEndpoint();
-	Serial.println("Starting server...");
-	server.begin(80);
 	Serial.println("Enableing OTA updates...");
 	enableOTAUpdates();
+
+	Serial.println("Adding endpoints...");
+	addEndpoints();
+
+	Serial.println("Adding unknown endpoint...");
+	addUnknownEndpoint();
+
+	Serial.println("Starting server...");
+	server.begin(80);
 }
 
 void ClientServer::addEndpoints() {
@@ -64,13 +67,7 @@ bool ClientServer::electNewMaster() {
 std::function<void()> ClientServer::handleClientGetInfo() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleClientGetInfo");
-
-		JsonObject& json = getDeviceInfo();
-
-		String result;
-		json.printTo(result);
-
-		server.send(HTTP_CODE_OK, "application/json", result);
+		server.send(HTTP_CODE_OK, "application/json", getDeviceInfo());
 	};
 	return lambda;
 }
@@ -208,7 +205,7 @@ std::function<void()> ClientServer::handleClientSetWiFiCreds() {
 	return lambda;
 }
 
-JsonObject& ClientServer::getDeviceInfo() {
+String ClientServer::getDeviceInfo() {
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject& json = jsonBuffer.createObject();
 
@@ -217,7 +214,10 @@ JsonObject& ClientServer::getDeviceInfo() {
 	json["ip"] = WiFi.localIP().toString();
 	json["powered"] = gpioPinState;
 
-	return json;
+	String result;
+	json.printTo(result);
+
+	return result;
 }
 
 //Power control

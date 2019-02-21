@@ -3,6 +3,6 @@
 #define _CONFIG_h
 
 const int PORT = 235;
-int gpioPin = 0;
+const int gpioPin = 0;
 
 #endif

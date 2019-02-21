@@ -76,12 +76,12 @@ std::function<void()> MasterServer::handleMasterGetDevices() {
 		for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
 			Device device = *it;
 
-			if (device.ip.equals(myIp)) devices.add(getDeviceInfo());
+			if (device.ip.equals(myIp)) devices.add(jsonBuffer.parseObject(getDeviceInfo()));
 			else {
 				String reply = reDirect(HTTP_CODE_OK, device.ip);
+
 				if (reply.equals("error") == false) {
-					DynamicJsonBuffer jsonBuffer2;
-					devices.add(jsonBuffer2.parseObject(reply));
+					devices.add(jsonBuffer.parseObject(reply));
 				}
 			}
 		}
@@ -236,29 +236,28 @@ String MasterServer::reDirect(t_http_codes expectedCodeReply) {
 }
 
 String MasterServer::reDirect(t_http_codes expectedCodeReply, String ip) {
-	//if (ip.length() == 0) return "error";
-
-	String payload = server.arg("plain");
-
 	String path = server.uri();
-
 	Serial.println("path: " + path);
 
 	String url = "http://" + ip + ":80" + path;
-
 	Serial.println("url: " + url);
 
 	HTTPClient http;
 	http.begin(url);
 
-	String toReturn;
-
-	Serial.print("strMethod(): ");
+	Serial.print("method: ");
 	Serial.println(strMethod());
-	Serial.println("payload: " + payload);
 
+	String payload = "";
+	if (server.hasArg("plain")) payload = server.arg("plain");
+	Serial.print("payload: ");
+	Serial.println(payload);
+
+	String toReturn = "";
 	if (http.sendRequest(strMethod(), payload) == expectedCodeReply) {
+		Serial.println("2");
 		toReturn = http.getString();
+		Serial.println("3");
 	}
 	else toReturn = "error";
 
@@ -270,13 +269,13 @@ String MasterServer::reDirect(t_http_codes expectedCodeReply, String ip) {
 const char* MasterServer::strMethod() {
 	const char* method;
 	switch (server.method()) {
-	case HTTP_ANY:     method = "GET";
-	case HTTP_GET:     method = "GET";
-	case HTTP_POST:    method = "POST";
-	case HTTP_PUT:     method = "PUT";
-	case HTTP_PATCH:   method = "PATCH";
-	case HTTP_DELETE:  method = "DELETE";
-	case HTTP_OPTIONS: method = "OPTIONS";
+	case HTTP_ANY:     method = "GET";		break;
+	case HTTP_GET:     method = "GET";		break;
+	case HTTP_POST:    method = "POST";		break;
+	case HTTP_PUT:     method = "PUT";		break;
+	case HTTP_PATCH:   method = "PATCH";	break;
+	case HTTP_DELETE:  method = "DELETE";	break;
+	case HTTP_OPTIONS: method = "OPTIONS";	break;
 	}
 
 	return method;
