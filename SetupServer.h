@@ -16,12 +16,12 @@ private:
 	const char* SETUP_SSID = getDeviceHostName();
 	const char* SETUP_PASSWORD = "zJ2f5xSX";
 
+	void addEndpoints();
 	std::function<void()> handleSetupConfig();
 	std::function<void()> handleSetupConnect();
 
 public:
 	bool start();
-	void addEndpoints();
 };
 
 #endif

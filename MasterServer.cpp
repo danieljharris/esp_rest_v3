@@ -24,7 +24,7 @@ bool MasterServer::start() {
 	addUnknownEndpoint();
 	server.begin(MASTER_PORT);
 	enableOTAUpdates();
-		
+	
 	return true;
 }
 
@@ -98,10 +98,7 @@ std::function<void()> MasterServer::handleMasterSetDevice() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleMasterSetDevice");
 
-		if (!validName()) {
-			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"name_field_missing\"}");
-			return;
-		}
+		if (!validId()) return;
 
 		if (isForMe()) handleClientSetDevice()();
 		else {
@@ -124,10 +121,7 @@ std::function<void()> MasterServer::handleMasterSetDeviceName() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleMasterSetDeviceName");
 
-		if (!validName()) {
-			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"name_field_missing\"}");
-			return;
-		}
+		if (!validId()) return;
 
 		if (isForMe()) handleClientSetName()();
 		else {
@@ -150,10 +144,7 @@ std::function<void()> MasterServer::handleMasterSetWiFiCreds() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleMasterSetWiFiCreds");
 
-		if (!validName()) {
-			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"name_field_missing\"}");
-			return;
-		}
+		if (!validId()) return;
 
 		if (isForMe()) handleClientSetWiFiCreds()();
 		else {
@@ -182,8 +173,9 @@ void MasterServer::refreshLookup() {
 	//Adds master (itself) to clientLookup
 	WiFiInfo info = creds.load();
 	Device myself;
-	myself.name = info.hostname;
+	myself.id = (String)ESP.getChipId();
 	myself.ip = WiFi.localIP().toString();
+	myself.name = info.hostname;
 	clientLookup.push_back(myself);
 
 	//Send out query for ESP_REST devices
@@ -201,9 +193,9 @@ void MasterServer::refreshLookup() {
 			JsonObject& input = jsonBuffer.parseObject(reply);
 
 			Device newDevice;
-			String name = input["name"];
 			newDevice.ip = ip;
-			newDevice.name = name;
+			newDevice.id = input["id"].asString();
+			newDevice.name = input["name"].asString();
 
 			clientLookup.push_back(newDevice);
 		}
@@ -212,13 +204,12 @@ void MasterServer::refreshLookup() {
 	Serial.println("Leaving refreshLookup");
 }
 
-String MasterServer::getDeviceIPFromName(String name) {
+String MasterServer::getDeviceIPFromIdOrName(String idOrName) {
 	for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
 		Device device = *it;
 
-		if (device.name.equalsIgnoreCase(name) == true) {
-			return device.ip;
-		}
+		if (device.id.equals(idOrName)) return device.ip;
+		else if (device.name.equals(idOrName)) return device.ip;
 	}
 	return "not_found";
 }
@@ -228,10 +219,13 @@ String MasterServer::reDirect(t_http_codes expectedCodeReply) {
 
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject& json = jsonBuffer.parseObject(payload);
-	String name = json["name"];
 
-	String ip = getDeviceIPFromName(name);
-	if (ip == "not_found") return "{\"error\":\"name_not_found\"}";
+	String idOrName = "";
+	if (json.containsKey("id")) idOrName = json["id"].asString();
+	else if (json.containsKey("name")) idOrName = json["name"].asString();
+
+	String ip = getDeviceIPFromIdOrName(idOrName);
+	if (ip == "not_found") return "{\"error\":\"id_or_name_not_found\"}";
 	else return reDirect(expectedCodeReply, ip);
 }
 
@@ -255,14 +249,11 @@ String MasterServer::reDirect(t_http_codes expectedCodeReply, String ip) {
 
 	String toReturn = "";
 	if (http.sendRequest(strMethod(), payload) == expectedCodeReply) {
-		Serial.println("2");
 		toReturn = http.getString();
-		Serial.println("3");
 	}
 	else toReturn = "error";
 
 	http.end();
-
 	return toReturn;
 }
 
@@ -285,23 +276,32 @@ bool MasterServer::isForMe() {
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
 	if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return false; }
-	if (!json.containsKey("name")) { server.send(HTTP_CODE_BAD_REQUEST); return false; }
+	if (!json.containsKey("id") && !json.containsKey("name")) { server.send(HTTP_CODE_BAD_REQUEST); return false; }
 
-	String name = json["name"];
-
-	WiFiInfo info = creds.load();
-	String myName = info.hostname;
-	return myName.equals(name);
+	if (json.containsKey("id")) {
+		String id = json["id"];
+		String myId = (String)ESP.getChipId();
+		return myId.equals(id);
+	}
+	else if (json.containsKey("name")) {
+		String name = json["name"];
+		WiFiInfo info = creds.load();
+		String myName = info.hostname;
+		return myName.equals(name);
+	}
+	else return false;
 }
 
-bool MasterServer::validName() {
-	if (!server.hasArg("plain")) return false;
+bool MasterServer::validId() {
+	bool isValid = true;
+	if (!server.hasArg("plain")) isValid = false;
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
-	if (!json.success()) return false;
-	if (!json.containsKey("name")) return false;
+	if (!json.success()) isValid = false;
+	else if (!json.containsKey("id") && !json.containsKey("name")) isValid = false;
 
-	return true;
+	if (!isValid) server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"id_or_name_field_missing\"}");
+	return isValid;
 }
 
 bool MasterServer::connectToWiFi(WiFiMode wifiMode) {
@@ -315,6 +315,8 @@ bool MasterServer::connectToWiFi(WiFiInfo info, WiFiMode wifiMode) {
 	Serial.println(info.password);
 	Serial.print("Name: ");
 	Serial.println(info.hostname);
+	Serial.print("Id: ");
+	Serial.println(ESP.getChipId());
 
 	WiFi.mode(wifiMode);
 	WiFi.hostname(info.hostname);

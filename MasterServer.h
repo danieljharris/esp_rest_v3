@@ -15,6 +15,7 @@
 #include <ArduinoJson.h>
 
 typedef struct Device {
+	String id = "Unknown";
 	String ip = "";
 	String name = "Unknown";
 };
@@ -28,24 +29,23 @@ private:
 	int MASTER_PORT = 235;
 	WiFiInfo masterInfo;
 
-	std::vector<Device> clientLookup;
-
+	void addEndpoints();
 	std::function<void()> handleMasterGetWiFiInfo();
 	std::function<void()> handleMasterGetDevices();
 	std::function<void()> handleMasterSetDevice();
 	std::function<void()> handleMasterSetDeviceName();
 	std::function<void()> handleMasterSetWiFiCreds();
-	void addEndpoints();
 
 	void refreshLookup();
+	std::vector<Device> clientLookup;
 
-	String getDeviceIPFromName(String name);
+	String getDeviceIPFromIdOrName(String idOrName);
 	String reDirect(t_http_codes expectedCodeReply);
 	String reDirect(t_http_codes expectedCodeReply, String ip);
 	const char* strMethod();
 	bool isForMe();
 
-	bool validName();
+	bool validId();
 
 	bool connectToWiFi(WiFiMode wifiMode);
 	bool connectToWiFi(WiFiInfo info, WiFiMode wifiMode);

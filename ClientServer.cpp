@@ -151,13 +151,15 @@ std::function<void()> ClientServer::handleClientSetName() {
 			return;
 		}
 
-		creds.save(json["new_name"].asString());
+		String new_name = json["new_name"].asString();
+		creds.save(new_name);
+		WiFi.hostname(new_name);
 
 		//Creates the return json object
 		DynamicJsonBuffer jsonBuffer2;
 		JsonObject& output = jsonBuffer2.createObject();
 
-		output["new_name"] = json["new_name"];
+		output["new_name"] = new_name;
 
 		String outputStr;
 		output.printTo(outputStr);
@@ -210,6 +212,7 @@ String ClientServer::getDeviceInfo() {
 	JsonObject& json = jsonBuffer.createObject();
 
 	WiFiInfo info = creds.load();
+	json["id"] = ESP.getChipId();
 	json["name"] = info.hostname;
 	json["ip"] = WiFi.localIP().toString();
 	json["powered"] = gpioPinState;
