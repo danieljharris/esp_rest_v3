@@ -3,16 +3,23 @@
 bool ClientServer::start() {
 	Serial.println("Entering startClient");
 
+	WiFi.mode(WIFI_STA);
+
+	if (!findAndConnectToMaster()) {
+		Serial.println("Failed to become client");
+		return false;
+	}
+	else Serial.println("I am a client");
+
+	//Sets the ESP's output pin to OFF
+	pinMode(GPIO_PIN, OUTPUT);
+	digitalWrite(GPIO_PIN, HIGH);
+
 	//Starts up MDNS
 	char hostString[16] = { 0 };
 	strcat(hostString, getDeviceHostName());
 	MDNS.begin(hostString);
-
-	//Serial.print("hostString: ");
-	//Serial.println(hostString);
-
-	//Broadcasts IP so can be seen by other devices
-	MDNS.addService(MDNS_ID, "tcp", 80);
+	MDNS.addService(MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
 
 	Serial.println("Enableing OTA updates...");
 	enableOTAUpdates();
@@ -24,7 +31,9 @@ bool ClientServer::start() {
 	addUnknownEndpoint();
 
 	Serial.println("Starting server...");
-	server.begin(80);
+	server.begin(CLIENT_PORT);
+
+	return true;
 }
 
 void ClientServer::addEndpoints() {
@@ -39,31 +48,6 @@ void ClientServer::addEndpoints() {
 	server.on("/credentials", HTTP_POST, clientSetWiFiCreds);
 }
 
-bool ClientServer::electNewMaster() {
-	Serial.print("Entering electNewMaster");
-	//Initalises the chosen host name to the host name of the current device
-	String myHostName = getDeviceHostName();
-
-	String chosenHostName = myHostName;
-
-	//Prints details for each service found
-	Serial.print("My host name: ");
-	Serial.print(chosenHostName);
-	Serial.print("Other host names: ");
-
-	//Send out query for ESP_REST devices
-	int devicesFound = MDNS.queryService(MDNS_ID, "tcp");
-	for (int i = 0; i < devicesFound; ++i) {
-		String currentHostName = MDNS.hostname(i);
-		if (currentHostName > chosenHostName) {
-			chosenHostName = currentHostName;
-		}
-		Serial.print(currentHostName);
-	}
-
-	return myHostName.equals(chosenHostName);
-}
-
 std::function<void()> ClientServer::handleClientGetInfo() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleClientGetInfo");
@@ -71,7 +55,6 @@ std::function<void()> ClientServer::handleClientGetInfo() {
 	};
 	return lambda;
 }
-
 std::function<void()> ClientServer::handleClientSetDevice() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleClientSetDevice");
@@ -137,7 +120,6 @@ std::function<void()> ClientServer::handleClientSetDevice() {
 	};
 	return lambda;
 }
-
 std::function<void()> ClientServer::handleClientSetName() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleClientSetName");
@@ -168,7 +150,6 @@ std::function<void()> ClientServer::handleClientSetName() {
 	};
 	return lambda;
 }
-
 std::function<void()> ClientServer::handleClientSetWiFiCreds() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleClientSetWiFiCreds");
@@ -207,6 +188,30 @@ std::function<void()> ClientServer::handleClientSetWiFiCreds() {
 	return lambda;
 }
 
+bool ClientServer::electNewMaster() {
+	Serial.print("Entering electNewMaster");
+	//Initalises the chosen host name to the host name of the current device
+	String myHostName = getDeviceHostName();
+
+	String chosenHostName = myHostName;
+
+	//Prints details for each service found
+	Serial.print("My host name: ");
+	Serial.print(chosenHostName);
+	Serial.print("Other host names: ");
+
+	//Send out query for ESP_REST devices
+	int devicesFound = MDNS.queryService(MDNS_ID, "tcp");
+	for (int i = 0; i < devicesFound; ++i) {
+		String currentHostName = MDNS.hostname(i);
+		if (currentHostName > chosenHostName) {
+			chosenHostName = currentHostName;
+		}
+		Serial.print(currentHostName);
+	}
+
+	return myHostName.equals(chosenHostName);
+}
 String ClientServer::getDeviceInfo() {
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject& json = jsonBuffer.createObject();
@@ -223,6 +228,101 @@ String ClientServer::getDeviceInfo() {
 	return result;
 }
 
+bool ClientServer::findAndConnectToMaster() {
+	//Can the master access point be found?
+	if (findMaster()) {
+		//Can I connect to the master access point?
+		if (connectToWiFi(MASTER_INFO)) {
+			//Can I get and save WiFi credentials from the master?
+			if (getAndSaveMainWiFiInfo()) {
+				//Can I connect to the WiFi router using the credentials?
+				return connectToWiFi(creds.load());
+			}
+		}
+	}
+	return false;
+}
+bool ClientServer::findMaster() {
+	Serial.println("Entering findMaster");
+
+	String lookingFor = MASTER_INFO.ssid;
+
+	Serial.print("Looking for: ");
+	Serial.println(lookingFor);
+
+	int foundNetworks = WiFi.scanNetworks();
+	Serial.println("I Found these networks:");
+	for (int i = 0; i < foundNetworks; i++) {
+		String current_ssid = WiFi.SSID(i);
+
+		Serial.print("SSID: ");
+		Serial.println(current_ssid);
+
+		if (current_ssid.equals(lookingFor)) return true;
+	}
+	return false;
+}
+bool ClientServer::getAndSaveMainWiFiInfo() {
+	Serial.println("Entering getAndSaveMainWiFiInfo");
+
+	String ip = WiFi.gatewayIP().toString() + ":" + MASTER_PORT;
+	String url = "http://" + ip + "/wifi_info";
+
+	HTTPClient http;
+	http.begin(url);
+
+	if (http.GET() == HTTP_CODE_OK) {
+		String payload = http.getString();
+
+		DynamicJsonBuffer jsonBuffer;
+		JsonObject& input = jsonBuffer.parseObject(payload);
+		String ssid = input["ssid"];
+		String password = input["password"];
+
+		creds.save(ssid, password);
+
+		http.end();
+		return true;
+	}
+	else {
+		http.end();
+		Serial.println("Failed to get WiFi credentials from master");
+		return false;
+	}
+}
+
+bool ClientServer::connectToWiFi(WiFiInfo info) {
+	if (info.ssid == "" || info.password == "") {
+		Serial.println("Invalid WiFi credentials");
+		return false;
+	}
+
+	Serial.println("Connecting to:");
+	Serial.print("SSID: ");
+	Serial.println(info.ssid);
+	Serial.print("Password: ");
+	Serial.println(info.password);
+	Serial.print("Name: ");
+	Serial.println(info.hostname);
+
+	WiFi.hostname(info.hostname);
+	WiFi.begin(info.ssid, info.password);
+
+	// Wait for connection
+	for (int i = 0; WiFi.status() != WL_CONNECTED && i < 15; i++) {
+		delay(500);
+		Serial.print(".");
+	}
+	Serial.println("");
+
+	if (WiFi.status() == WL_CONNECTED) {
+		Serial.print("Connected!\nIP address: ");
+		Serial.println(WiFi.localIP().toString());
+	}
+	else Serial.println("Could not connect!");
+	return (WiFi.status() == WL_CONNECTED);
+}
+
 //Power control
 void ClientServer::power_toggle() {
 	Serial.println("Entering power_toggle");
@@ -230,17 +330,15 @@ void ClientServer::power_toggle() {
 	if (gpioPinState == false) power_on();
 	else power_off();
 }
-
 void ClientServer::power_on() {
 	Serial.println("Entering power_on");
 
 	gpioPinState = true;
-	digitalWrite(gpioPin, LOW);
+	digitalWrite(GPIO_PIN, LOW);
 }
-
 void ClientServer::power_off() {
 	Serial.println("Entering power_off");
 
 	gpioPinState = false;
-	digitalWrite(gpioPin, HIGH);
+	digitalWrite(GPIO_PIN, HIGH);
 }

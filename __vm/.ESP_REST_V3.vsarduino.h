@@ -19,10 +19,13 @@
 #define F_CPU 80000000L
 #define LWIP_OPEN_SRC
 #define TCP_MSS 536
+#define LWIP_FEATURES 1
+#define LWIP_IPV6 0
 #define ARDUINO 10808
 #define ARDUINO_ESP8266_GENERIC
 #define ARDUINO_ARCH_ESP8266
 #define LED_BUILTIN 1
+#define FLASHMODE_DIO
 #define ESP8266
 #define __cplusplus 201103L
 #undef __cplusplus

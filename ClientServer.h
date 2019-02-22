@@ -9,6 +9,7 @@
 	#include "WProgram.h"
 #endif
 
+#include "Config.h"
 #include "FrameworkServer.h"
 #include <ESP8266mDNS.h>
 #include <ArduinoJson.h>
@@ -16,15 +17,17 @@
 class ClientServer : public FrameworkServer {
 private:
 	void addEndpoints();
-	bool electNewMaster();
 
-	int gpioPin = 0;
-	bool gpioPinState = false;
+	bool electNewMaster();
+	bool getAndSaveMainWiFiInfo();
+	bool findAndConnectToMaster();
+	bool findMaster();
 
 	//Power control
 	void power_toggle();
 	void power_on();
 	void power_off();
+	bool gpioPinState = false;
 
 protected:
 	std::function<void()> handleClientGetInfo();
@@ -33,8 +36,7 @@ protected:
 	std::function<void()> handleClientSetWiFiCreds();
 
 	String getDeviceInfo();
-
-	const String MDNS_ID = "ESP_NETWORK";
+	bool connectToWiFi(WiFiInfo info);
 
 public:
 	bool start();
