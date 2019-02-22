@@ -9,21 +9,20 @@
 	#include "WProgram.h"
 #endif
 
+#include "WiFiCredentials.h"
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPClient.h>
 #include <ArduinoOTA.h>
-#include "WiFiCredentials.h"
 
 class FrameworkServer {
 protected:
 	ESP8266WebServer server;
-
 	WiFiCredentials creds;
 
 	char* getDeviceHostName();
 	void enableOTAUpdates();
-	virtual void addEndpoints() {};
 	void addUnknownEndpoint();
+	virtual void addEndpoints() {};
 
 public:
 	virtual bool start() {};

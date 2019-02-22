@@ -28,16 +28,28 @@ char* FrameworkServer::getDeviceHostName() {
 }
 
 void FrameworkServer::enableOTAUpdates() {
-	Serial.println("Entering enableOTAUpdates");
-
 	//Enabled "Over The Air" updates so that the ESPs can be updated remotely 
+	ArduinoOTA.setPort(8266);
 	ArduinoOTA.setHostname(getDeviceHostName());
+
+	ArduinoOTA.onStart([]() {
+		Serial.println("OTA Started...");
+	});
+	ArduinoOTA.onEnd([]() {
+		Serial.println("\nOTA Ended!");
+	});
+	ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+		Serial.printf("Progress: %u%%\r\n", (progress / (total / 100)));
+	});
+
 	ArduinoOTA.begin();
 }
 
 void FrameworkServer::addUnknownEndpoint()
 {
 	std::function<void()> lambda = [=]() {
+		Serial.println("Entering handleClientUnknown");
+
 		Serial.println("");
 		Serial.print("Unknown command: ");
 		Serial.println(server.uri());

@@ -6,7 +6,6 @@ bool SetupServer::start() {
 	WiFi.mode(WIFI_AP);
 	WiFi.softAP(SETUP_SSID, SETUP_PASSWORD);
 
-
 	addEndpoints();
 	addUnknownEndpoint();
 	server.begin(80);
