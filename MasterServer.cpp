@@ -15,7 +15,10 @@ bool MasterServer::start() {
 	pinMode(GPIO_PIN, OUTPUT);
 	digitalWrite(GPIO_PIN, HIGH);
 
-	MDNS.begin(MASTER_INFO.hostname); //Starts up MDNS
+	Serial.println("Starting MDNS...");
+	startMDNS();
+
+	Serial.println("Opening soft access point...");
 	WiFi.softAP(MASTER_INFO.ssid, MASTER_INFO.password); //Starts access point for new devices to connect to
 
 	Serial.println("Enableing OTA updates...");
@@ -31,6 +34,11 @@ bool MasterServer::start() {
 	server.begin(MASTER_PORT);
 	
 	return true;
+}
+
+void MasterServer::update() {
+	MDNS.removeServiceQuery(hMDNSServiceQuery);
+	hMDNSServiceQuery = MDNS.installServiceQuery("UNI_FRAME", "tcp", Callback);
 }
 
 void MasterServer::addEndpoints() {
@@ -82,23 +90,22 @@ std::function<void()> MasterServer::handleMasterGetDevices() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleMasterGetDevices");
 
-		refreshLookup();
-
 		DynamicJsonBuffer jsonBuffer;
 		JsonObject& json = jsonBuffer.createObject();
 		JsonArray& devices = json.createNestedArray("devices");
 
-		String myIp = WiFi.localIP().toString();
+		devices.add(jsonBuffer.parseObject(getDeviceInfo()));
 
-		for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
-			Device device = *it;
+		for (auto info : MDNS.answerInfo(hMDNSServiceQuery)) {
+			if (info.txtAvailable()) {
+				JsonObject& device = jsonBuffer.createObject();
 
-			if (device.ip.equals(myIp)) devices.add(jsonBuffer.parseObject(getDeviceInfo()));
-			else {
-				String reply = reDirect(device.ip);
-				if (reply.equals("error") == false) {
-					devices.add(jsonBuffer.parseObject(reply));
+				for (auto kv : info.keyValues()) {
+					if (String(kv.first).equals("id")) device["id"] = String(kv.second).toInt();
+					else if (String(kv.first).equals("ip")) device["ip"] = String(kv.second);
+					else if (String(kv.first).equals("name")) device["name"] = String(kv.second);
 				}
+				devices.add(device);
 			}
 		}
 
@@ -147,64 +154,38 @@ std::function<void()> MasterServer::handleMasterSetWiFiCreds() {
 	return lambda;
 }
 
-void MasterServer::refreshLookup() {
-	Serial.println("Entering refreshLookup");
+MDNSResponder::MDNSServiceQueryCallbackFunc MasterServer::QueryCallback() {
+	MDNSResponder::MDNSServiceQueryCallbackFunc callback = [=](MDNSResponder::MDNSServiceInfo serviceInfo, MDNSResponder::AnswerType answerType, bool p_bSetContent) {
+		if (answerType == MDNSResponder::AnswerType::Txt) {
+			Serial.println("Entering QueryCallback");
 
-	//Clears known clients ready to repopulate the vector
-	clientLookup.clear();
-
-	//Adds master (itself) to clientLookup
-	WiFiInfo info = creds.load();
-	Device myself;
-	myself.id = (String)ESP.getChipId();
-	myself.ip = WiFi.localIP().toString();
-	myself.name = info.hostname;
-	clientLookup.push_back(myself);
-
-	//Send out query for ESP_REST devices
-	int devicesFound = MDNS.queryService(MDNS_ID, "tcp");
-	Serial.print("devicesFound: ");
-	Serial.println(devicesFound);
-	for (int i = 0; i < devicesFound; ++i) {
-		//Call the device's IP and get its info
-		String ip = MDNS.IP(i).toString();
-		String reply = reDirect(ip);
-
-		Serial.println("ip: " + ip);
-		Serial.println("reply: " + reply);
-
-		if (reply.equals("error") == false) {
-			DynamicJsonBuffer jsonBuffer;
-			JsonObject& input = jsonBuffer.parseObject(reply);
-
-			Device newDevice;
-			newDevice.ip = ip;
-			newDevice.id = input["id"].asString();
-			newDevice.name = input["name"].asString();
-
-			clientLookup.push_back(newDevice);
+			//for (auto kv : serviceInfo.keyValues()) {
+			//	Serial.println(String(kv.first) + ":" + String(kv.second));
+			//}
 		}
-	}
-
-	Serial.println("Leaving refreshLookup");
+	};
+	return callback;
 }
 
 String MasterServer::getDeviceIPFromIdOrName(String idOrName) {
 	Serial.print("idOrName:");
 	Serial.println(idOrName);
 
-	for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
-		Device device = *it;
-
-		//Serial.print("device.id:");
-		//Serial.println(device.id);
-
-		//Serial.print("device.name:");
-		//Serial.println(device.name);
-
-		if (device.id.equals(idOrName)) return device.ip;
-		else if (device.name.equals(idOrName)) return device.ip;
+	for (auto info : MDNS.answerInfo(hMDNSServiceQuery)) {
+		if (info.txtAvailable()) {
+			String id = "";
+			String ip = "";
+			String name = "";
+			for (auto kv : info.keyValues()) {
+				if (String(kv.first).equals("id")) id = String(kv.second);
+				else if (String(kv.first).equals("ip")) ip = String(kv.second);
+				else if (String(kv.first).equals("name")) name = String(kv.second);
+			}
+			if (id.equals(idOrName)) return ip;
+			else if (name.equals(idOrName)) return ip;
+		}
 	}
+
 	return "not_found";
 }
 
@@ -311,4 +292,10 @@ bool MasterServer::validId() {
 
 	if (!isValid) server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"id_or_name_field_missing\"}");
 	return isValid;
+}
+
+void MasterServer::startMDNS() {
+	MDNS.begin(MASTER_INFO.hostname); //Starts up MDNS
+
+	hMDNSServiceQuery = MDNS.installServiceQuery("UNI_FRAME", "tcp", Callback);
 }

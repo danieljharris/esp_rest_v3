@@ -9,7 +9,6 @@
 	#include "WProgram.h"
 #endif
 
-#include "Config.h"
 #include "ClientServer.h"
 #include <ESP8266HTTPClient.h>
 #include <ESP8266mDNS.h>
@@ -39,8 +38,9 @@ private:
 	std::function<void()> handleMasterSetDeviceName();
 	std::function<void()> handleMasterSetWiFiCreds();
 
-	void refreshLookup();
-	std::vector<Device> clientLookup;
+	MDNSResponder::hMDNSServiceQuery hMDNSServiceQuery = 0;
+	MDNSResponder::MDNSServiceQueryCallbackFunc QueryCallback();
+	MDNSResponder::MDNSServiceQueryCallbackFunc Callback = QueryCallback();
 
 	String getDeviceIPFromIdOrName(String idOrName);
 	void reDirect();
@@ -49,8 +49,11 @@ private:
 	bool isForMe();
 	bool validId();
 
+	void startMDNS();
+
 public:
 	bool start();
+	void update();
 
 	//MasterServer() {
 	//};

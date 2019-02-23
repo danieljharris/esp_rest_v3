@@ -18,6 +18,8 @@ class ClientServer : public FrameworkServer {
 private:
 	void addEndpoints();
 
+	void startMDNS();
+
 	bool electNewMaster();
 	bool getAndSaveMainWiFiInfo();
 	bool findAndConnectToMaster();

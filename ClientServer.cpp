@@ -15,11 +15,8 @@ bool ClientServer::start() {
 	pinMode(GPIO_PIN, OUTPUT);
 	digitalWrite(GPIO_PIN, HIGH);
 
-	//Starts up MDNS
-	char hostString[16] = { 0 };
-	strcat(hostString, getDeviceHostName());
-	MDNS.begin(hostString);
-	MDNS.addService(MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
+	Serial.println("Starting MDNS...");
+	startMDNS();
 
 	Serial.println("Enableing OTA updates...");
 	enableOTAUpdates();
@@ -188,6 +185,18 @@ std::function<void()> ClientServer::handleClientSetWiFiCreds() {
 	return lambda;
 }
 
+void ClientServer::startMDNS() {
+	//Starts up MDNS
+	char hostString[16] = { 0 };
+	strcat(hostString, getDeviceHostName());
+	MDNS.begin(hostString);
+	MDNS.addService("UNI_FRAME", "tcp", 80); //Broadcasts IP so can be seen by other devices
+
+	MDNS.addServiceTxt("UNI_FRAME", "tcp", "id", (String)ESP.getChipId());
+	MDNS.addServiceTxt("UNI_FRAME", "tcp", "ip", WiFi.localIP().toString());
+	MDNS.addServiceTxt("UNI_FRAME", "tcp", "name", creds.load().hostname);
+}
+
 bool ClientServer::electNewMaster() {
 	Serial.print("Entering electNewMaster");
 	//Initalises the chosen host name to the host name of the current device
@@ -201,7 +210,7 @@ bool ClientServer::electNewMaster() {
 	Serial.print("Other host names: ");
 
 	//Send out query for ESP_REST devices
-	int devicesFound = MDNS.queryService(MDNS_ID, "tcp");
+	int devicesFound = MDNS.queryService("UNI_FRAME", "tcp");
 	for (int i = 0; i < devicesFound; ++i) {
 		String currentHostName = MDNS.hostname(i);
 		if (currentHostName > chosenHostName) {
@@ -218,9 +227,8 @@ String ClientServer::getDeviceInfo() {
 
 	WiFiInfo info = creds.load();
 	json["id"] = ESP.getChipId();
-	json["name"] = info.hostname;
 	json["ip"] = WiFi.localIP().toString();
-	json["powered"] = gpioPinState;
+	json["name"] = info.hostname;
 
 	String result;
 	json.printTo(result);
