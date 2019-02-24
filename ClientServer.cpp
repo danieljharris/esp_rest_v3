@@ -15,11 +15,11 @@ bool ClientServer::start() {
 	pinMode(GPIO_PIN, OUTPUT);
 	digitalWrite(GPIO_PIN, HIGH);
 
-	//Starts up MDNS
-	char hostString[16] = { 0 };
-	strcat(hostString, getDeviceHostName());
-	MDNS.begin(hostString);
-	MDNS.addService(MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
+	Serial.println("Starting MDNS...");
+	startMDNS();
+
+	Serial.println("Letting master know I exist...");
+	checkinWithMaster();
 
 	Serial.println("Enableing OTA updates...");
 	enableOTAUpdates();
@@ -33,19 +33,14 @@ bool ClientServer::start() {
 	Serial.println("Starting server...");
 	server.begin(CLIENT_PORT);
 
+	Serial.println("Ready!");
 	return true;
 }
 
 void ClientServer::addEndpoints() {
-	std::function<void()> clientGetInfo = handleClientGetInfo();
-	std::function<void()> clientSetDevice = handleClientSetDevice();
-	std::function<void()> clientSetName = handleClientSetName();
-	std::function<void()> clientSetWiFiCreds = handleClientSetWiFiCreds();
-
-	server.on("/device", HTTP_GET, clientGetInfo);
-	server.on("/device", HTTP_POST, clientSetDevice);
-	server.on("/name", HTTP_POST, clientSetName);
-	server.on("/credentials", HTTP_POST, clientSetWiFiCreds);
+	for (std::vector<Endpoint>::iterator it = clientEndpoints.begin(); it != clientEndpoints.end(); ++it) {
+		server.on(it->path, it->method, it->function);
+	}
 }
 
 std::function<void()> ClientServer::handleClientGetInfo() {
@@ -188,6 +183,24 @@ std::function<void()> ClientServer::handleClientSetWiFiCreds() {
 	return lambda;
 }
 
+void ClientServer::startMDNS() {
+	DynamicJsonBuffer jsonBuffer;
+	JsonObject& json = jsonBuffer.createObject();
+	json["id"] = ESP.getChipId();
+	json["name"] = creds.load().hostname;
+	String jsonName;
+	json.printTo(jsonName);
+
+	MDNS.begin(jsonName.c_str());
+	MDNS.addService("UNI_FRAME", "tcp", 80); //Broadcasts IP so can be seen by other devices
+}
+
+void ClientServer::checkinWithMaster() {
+	HTTPClient http;
+	http.begin("http://" + (String)MASTER_INFO.hostname + ":" + MASTER_PORT + "/checkin");
+	http.sendRequest("POST", getDeviceInfo());
+}
+
 bool ClientServer::electNewMaster() {
 	Serial.print("Entering electNewMaster");
 	//Initalises the chosen host name to the host name of the current device
@@ -201,7 +214,7 @@ bool ClientServer::electNewMaster() {
 	Serial.print("Other host names: ");
 
 	//Send out query for ESP_REST devices
-	int devicesFound = MDNS.queryService(MDNS_ID, "tcp");
+	int devicesFound = MDNS.queryService("UNI_FRAME", "tcp");
 	for (int i = 0; i < devicesFound; ++i) {
 		String currentHostName = MDNS.hostname(i);
 		if (currentHostName > chosenHostName) {
@@ -216,11 +229,9 @@ String ClientServer::getDeviceInfo() {
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject& json = jsonBuffer.createObject();
 
-	WiFiInfo info = creds.load();
 	json["id"] = ESP.getChipId();
-	json["name"] = info.hostname;
 	json["ip"] = WiFi.localIP().toString();
-	json["powered"] = gpioPinState;
+	json["name"] = creds.load().hostname;
 
 	String result;
 	json.printTo(result);

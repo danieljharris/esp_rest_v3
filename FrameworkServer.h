@@ -26,6 +26,7 @@ protected:
 
 public:
 	virtual bool start() {};
+	virtual void update() {};
 	void handle() { server.handleClient(); };
 	~FrameworkServer();
 	void stop();

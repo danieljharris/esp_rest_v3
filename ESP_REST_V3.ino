@@ -3,6 +3,7 @@
 #include "ClientServer.h"
 #include "MasterServer.h"
 #include <ArduinoOTA.h>
+#include <PolledTimeout.h>
 
 /*
 	TODO:
@@ -28,6 +29,8 @@
 
 FrameworkServer* server = new FrameworkServer;
 
+esp8266::polledTimeout::periodic period(1000 * 10); // Every 5 calls of loop (Default is 1000 = 1 loop)
+
 void setup() {
 	Serial.begin(19200);
 	Serial.println("\nStarting ESP8266...");
@@ -36,7 +39,7 @@ void setup() {
 	if (!server->start()){
 		server = new MasterServer();
 		if (!server->start()) {
-			server = new SetupServer();
+			server = new SetupServer(); // ### Should keep checking for master here?
 			if (!server->start()) {
 				Serial.println("\nFailed to become client, master and setup. Restarting...");
 				ESP.restart();
@@ -46,8 +49,10 @@ void setup() {
 }
 
 void loop() {
-	ArduinoOTA.handle();
 	server->handle();
+	ArduinoOTA.handle();
+
+	if (period) server->update();
 
 	//int lookupCountdownMax = 100000;
 	//int lookupCountdown = lookupCountdownMax;
