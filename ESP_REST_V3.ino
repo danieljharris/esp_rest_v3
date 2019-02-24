@@ -29,7 +29,7 @@
 
 FrameworkServer* server = new FrameworkServer;
 
-esp8266::polledTimeout::periodic period(1000); // Every calls of loop()
+esp8266::polledTimeout::periodic period(1000 * 10); // Every 5 calls of loop (Default is 1000 = 1 loop)
 
 void setup() {
 	Serial.begin(19200);

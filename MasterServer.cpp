@@ -33,35 +33,35 @@ bool MasterServer::start() {
 	Serial.println("Starting server...");
 	server.begin(MASTER_PORT);
 	
+	refreshLookup();
+
+	Serial.println("Ready!");
 	return true;
 }
 
-void MasterServer::update() {
-	MDNS.removeServiceQuery(hMDNSServiceQuery);
-	hMDNSServiceQuery = MDNS.installServiceQuery("UNI_FRAME", "tcp", Callback);
-}
+void MasterServer::update() { refreshLookup(); }
 
 void MasterServer::addEndpoints() {
-	std::function<void()> masterGetWiFiInfo = handleMasterGetWiFiInfo();
-	std::function<void()> masterGetDevices = handleMasterGetDevices();
-	std::function<void()> masterSetDevice = handleMasterSetDevice();
-	std::function<void()> masterSetDeviceName = handleMasterSetDeviceName();
-	std::function<void()> masterSetWiFiCreds = handleMasterSetWiFiCreds();
-
-	server.on("/wifi_info", HTTP_GET, masterGetWiFiInfo);
-	server.on("/device", HTTP_GET, masterGetDevices);
-	server.on("/device", HTTP_POST, masterSetDevice);
-	server.on("/name", HTTP_POST, masterSetDeviceName);
-	server.on("/credentials", HTTP_POST, masterSetWiFiCreds);
+	for (std::vector<Endpoint>::iterator it = masterEndpoints.begin(); it != masterEndpoints.end(); ++it) {
+		server.on(it->path, it->method, it->function);
+	}
 }
 void MasterServer::addUnknownEndpoint()
 {
 	std::function<void()> lambda = [=]() {
-		Serial.println("Entering handleMasterUnknown");
+		Serial.println("Entering handleMasterUnknown / masterToClientEndpoint");
 
-		if (!validId()) return;
-
-		if (isForMe()) server.send(HTTP_CODE_NOT_FOUND);
+		//If the request has no name/id or its name/id matches mine
+		if (!validId() || isForMe()) {
+			for (std::vector<Endpoint>::iterator it = clientEndpoints.begin(); it != clientEndpoints.end(); ++it) {
+				if (server.uri().equals(it->path) && server.method() == it->method) {
+					it->function();
+					return;
+				}
+			}
+			//When no matching endpoint can be found
+			server.send(HTTP_CODE_NOT_FOUND, "application/json", "{\"error\":\"endpoint_missing\"}");
+		}
 		else reDirect();
 	};
 	server.onNotFound(lambda);
@@ -96,17 +96,13 @@ std::function<void()> MasterServer::handleMasterGetDevices() {
 
 		devices.add(jsonBuffer.parseObject(getDeviceInfo()));
 
-		for (auto info : MDNS.answerInfo(hMDNSServiceQuery)) {
-			if (info.txtAvailable()) {
-				JsonObject& device = jsonBuffer.createObject();
-
-				for (auto kv : info.keyValues()) {
-					if (String(kv.first).equals("id")) device["id"] = String(kv.second).toInt();
-					else if (String(kv.first).equals("ip")) device["ip"] = String(kv.second);
-					else if (String(kv.first).equals("name")) device["name"] = String(kv.second);
-				}
-				devices.add(device);
-			}
+		for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
+			Device device = *it;
+			JsonObject& jsonDevice = jsonBuffer.createObject();
+			jsonDevice["id"] = device.id.toInt();
+			jsonDevice["ip"] = device.ip;
+			jsonDevice["name"] = device.name;
+			devices.add(jsonDevice);
 		}
 
 		String result;
@@ -117,76 +113,35 @@ std::function<void()> MasterServer::handleMasterGetDevices() {
 
 	return lambda;
 }
-std::function<void()> MasterServer::handleMasterSetDevice() {
+std::function<void()> MasterServer::handleMasterCheckin() {
 	std::function<void()> lambda = [=]() {
-		Serial.println("Entering handleMasterSetDevice");
+		Serial.println("Entering handleMasterCheckin");
 
-		if (!validId()) return;
+		DynamicJsonBuffer jsonBuffer;
+		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return false; }
+		if (!json.containsKey("id") && !json.containsKey("name")) { server.send(HTTP_CODE_BAD_REQUEST); return false; }
 
-		if (isForMe()) handleClientSetDevice()();
-		else reDirect();
+		String ip = server.client().remoteIP().toString();
+		Serial.print("ip: ");
+		Serial.println(ip);
+
+		Device device;
+		device.ip = ip;
+		if (json.containsKey("id")) device.id = json["id"].asString();
+		if (json.containsKey("name")) device.name = json["name"].asString();
+		clientLookup.push_back(device);
 	};
 
 	return lambda;
-}
-std::function<void()> MasterServer::handleMasterSetDeviceName() {
-	std::function<void()> lambda = [=]() {
-		Serial.println("Entering handleMasterSetDeviceName");
-
-		if (!validId()) return;
-
-		if (isForMe()) handleClientSetName()();
-		else reDirect();
-	};
-
-	return lambda;
-}
-std::function<void()> MasterServer::handleMasterSetWiFiCreds() {
-	std::function<void()> lambda = [=]() {
-		Serial.println("Entering handleMasterSetWiFiCreds");
-
-		if (!validId()) return;
-
-		if (isForMe()) handleClientSetWiFiCreds()();
-		else reDirect();
-	};
-
-	return lambda;
-}
-
-MDNSResponder::MDNSServiceQueryCallbackFunc MasterServer::QueryCallback() {
-	MDNSResponder::MDNSServiceQueryCallbackFunc callback = [=](MDNSResponder::MDNSServiceInfo serviceInfo, MDNSResponder::AnswerType answerType, bool p_bSetContent) {
-		if (answerType == MDNSResponder::AnswerType::Txt) {
-			Serial.println("Entering QueryCallback");
-
-			//for (auto kv : serviceInfo.keyValues()) {
-			//	Serial.println(String(kv.first) + ":" + String(kv.second));
-			//}
-		}
-	};
-	return callback;
 }
 
 String MasterServer::getDeviceIPFromIdOrName(String idOrName) {
-	Serial.print("idOrName:");
-	Serial.println(idOrName);
-
-	for (auto info : MDNS.answerInfo(hMDNSServiceQuery)) {
-		if (info.txtAvailable()) {
-			String id = "";
-			String ip = "";
-			String name = "";
-			for (auto kv : info.keyValues()) {
-				if (String(kv.first).equals("id")) id = String(kv.second);
-				else if (String(kv.first).equals("ip")) ip = String(kv.second);
-				else if (String(kv.first).equals("name")) name = String(kv.second);
-			}
-			if (id.equals(idOrName)) return ip;
-			else if (name.equals(idOrName)) return ip;
-		}
+	Serial.println("idOrName:" + idOrName);
+	for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
+		if (it->id.equals(idOrName) || it->name.equals(idOrName)) return it->ip;
 	}
-
-	return "not_found";
+	return "";
 }
 
 void MasterServer::reDirect() {
@@ -200,7 +155,7 @@ void MasterServer::reDirect() {
 	else if (json.containsKey("name")) idOrName = json["name"].asString();
 
 	String ip = getDeviceIPFromIdOrName(idOrName);
-	if (ip == "not_found") {
+	if (ip == "") {
 		String reply = "{\"error\":\"device_not_found\"}";
 		server.send(HTTP_CODE_BAD_REQUEST, "application/json", reply);
 		return;
@@ -208,12 +163,22 @@ void MasterServer::reDirect() {
 
 	HTTPClient http;
 	http.begin("http://" + ip + ":" + CLIENT_PORT + server.uri());
+	http.setTimeout(2000); //Reduced the timeout from 5000 to fail faster
 
 	int httpCode = http.sendRequest(getMethod(), payload);
 
 	//HttpCode is only below 0 when there is an issue contacting client
 	if (httpCode < 0) {
 		http.end();
+
+		//If client can not be reached it is removed from the clientLookup
+		for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
+			if (it->ip.equals(ip)) {
+				clientLookup.erase(it);
+				break;
+			}
+		}
+
 		String reply = "{\"error\":\"error_contacting_device\"}";
 		server.send(HTTP_CODE_BAD_GATEWAY, "application/json", reply);
 		return;
@@ -249,13 +214,13 @@ String MasterServer::reDirect(String ip) {
 const char* MasterServer::getMethod() {
 	const char* method;
 	switch (server.method()) {
-	case HTTP_ANY:     method = "GET";		break;
-	case HTTP_GET:     method = "GET";		break;
-	case HTTP_POST:    method = "POST";		break;
-	case HTTP_PUT:     method = "PUT";		break;
-	case HTTP_PATCH:   method = "PATCH";	break;
-	case HTTP_DELETE:  method = "DELETE";	break;
-	case HTTP_OPTIONS: method = "OPTIONS";	break;
+		case HTTP_ANY:     method = "GET";		break;
+		case HTTP_GET:     method = "GET";		break;
+		case HTTP_POST:    method = "POST";		break;
+		case HTTP_PUT:     method = "PUT";		break;
+		case HTTP_PATCH:   method = "PATCH";	break;
+		case HTTP_DELETE:  method = "DELETE";	break;
+		case HTTP_OPTIONS: method = "OPTIONS";	break;
 	}
 	return method;
 }
@@ -289,13 +254,34 @@ bool MasterServer::validId() {
 		if (!json.success()) isValid = false;
 		else if (!json.containsKey("id") && !json.containsKey("name")) isValid = false;
 	}
-
-	if (!isValid) server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"id_or_name_field_missing\"}");
 	return isValid;
 }
 
 void MasterServer::startMDNS() {
 	MDNS.begin(MASTER_INFO.hostname); //Starts up MDNS
+}
 
-	hMDNSServiceQuery = MDNS.installServiceQuery("UNI_FRAME", "tcp", Callback);
+void MasterServer::refreshLookup()
+{
+	Serial.println("Entering refreshLookup");
+
+	//Clears known clients ready to repopulate the vector
+	clientLookup.clear();
+
+	//Send out query for ESP_REST devices
+	int devicesFound = MDNS.queryService("UNI_FRAME", "tcp");
+	for (int i = 0; i < devicesFound; ++i) {
+		//Call the device's IP and get its info
+		String ip = MDNS.answerIP(i).toString();
+		String reply = MDNS.answerHostname(i);
+
+		//Serial.println("ip: " + ip);
+		//Serial.println("reply: " + reply);
+
+		DynamicJsonBuffer jsonBuffer;
+		JsonObject& input = jsonBuffer.parseObject(reply);
+
+		Device newDevice(input["id"].asString(), ip, input["name"].asString());
+		clientLookup.push_back(newDevice);
+	}
 }

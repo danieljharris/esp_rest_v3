@@ -34,13 +34,13 @@ private:
 
 	std::function<void()> handleMasterGetWiFiInfo();
 	std::function<void()> handleMasterGetDevices();
-	std::function<void()> handleMasterSetDevice();
-	std::function<void()> handleMasterSetDeviceName();
-	std::function<void()> handleMasterSetWiFiCreds();
+	std::function<void()> handleMasterCheckin();
 
-	MDNSResponder::hMDNSServiceQuery hMDNSServiceQuery = 0;
-	MDNSResponder::MDNSServiceQueryCallbackFunc QueryCallback();
-	MDNSResponder::MDNSServiceQueryCallbackFunc Callback = QueryCallback();
+	std::vector<Endpoint> masterEndpoints{
+	Endpoint("/wifi_info", HTTP_GET, handleMasterGetWiFiInfo()),
+	Endpoint("/devices", HTTP_GET, handleMasterGetDevices()),
+	Endpoint("/checkin", HTTP_POST, handleMasterCheckin()),
+	};
 
 	String getDeviceIPFromIdOrName(String idOrName);
 	void reDirect();
@@ -50,6 +50,8 @@ private:
 	bool validId();
 
 	void startMDNS();
+	void refreshLookup();
+	std::vector<Device> clientLookup;
 
 public:
 	bool start();

@@ -14,11 +14,29 @@
 #include <ESP8266mDNS.h>
 #include <ArduinoJson.h>
 
+typedef struct Endpoint {
+	String path;
+	HTTPMethod method;
+	std::function<void()> function;
+
+	Endpoint(String path, HTTPMethod method, std::function<void()> function) {
+		this->path = path;
+		this->method = method;
+		this->function = function;
+	}
+};
+
 class ClientServer : public FrameworkServer {
 private:
 	void addEndpoints();
 
+	std::function<void()> handleClientGetInfo();
+	std::function<void()> handleClientSetDevice();
+	std::function<void()> handleClientSetName();
+	std::function<void()> handleClientSetWiFiCreds();
+
 	void startMDNS();
+	void checkinWithMaster();
 
 	bool electNewMaster();
 	bool getAndSaveMainWiFiInfo();
@@ -32,10 +50,12 @@ private:
 	bool gpioPinState = false;
 
 protected:
-	std::function<void()> handleClientGetInfo();
-	std::function<void()> handleClientSetDevice();
-	std::function<void()> handleClientSetName();
-	std::function<void()> handleClientSetWiFiCreds();
+	std::vector<Endpoint> clientEndpoints{
+		Endpoint("/device", HTTP_GET, handleClientGetInfo()),
+		Endpoint("/device", HTTP_POST, handleClientSetDevice()),
+		Endpoint("/name", HTTP_POST, handleClientSetName()),
+		Endpoint("/credentials", HTTP_POST, handleClientSetWiFiCreds())
+	};
 
 	String getDeviceInfo();
 	bool connectToWiFi(WiFiInfo info);

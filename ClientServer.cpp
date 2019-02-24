@@ -18,6 +18,9 @@ bool ClientServer::start() {
 	Serial.println("Starting MDNS...");
 	startMDNS();
 
+	Serial.println("Letting master know I exist...");
+	checkinWithMaster();
+
 	Serial.println("Enableing OTA updates...");
 	enableOTAUpdates();
 
@@ -30,19 +33,14 @@ bool ClientServer::start() {
 	Serial.println("Starting server...");
 	server.begin(CLIENT_PORT);
 
+	Serial.println("Ready!");
 	return true;
 }
 
 void ClientServer::addEndpoints() {
-	std::function<void()> clientGetInfo = handleClientGetInfo();
-	std::function<void()> clientSetDevice = handleClientSetDevice();
-	std::function<void()> clientSetName = handleClientSetName();
-	std::function<void()> clientSetWiFiCreds = handleClientSetWiFiCreds();
-
-	server.on("/device", HTTP_GET, clientGetInfo);
-	server.on("/device", HTTP_POST, clientSetDevice);
-	server.on("/name", HTTP_POST, clientSetName);
-	server.on("/credentials", HTTP_POST, clientSetWiFiCreds);
+	for (std::vector<Endpoint>::iterator it = clientEndpoints.begin(); it != clientEndpoints.end(); ++it) {
+		server.on(it->path, it->method, it->function);
+	}
 }
 
 std::function<void()> ClientServer::handleClientGetInfo() {
@@ -186,15 +184,21 @@ std::function<void()> ClientServer::handleClientSetWiFiCreds() {
 }
 
 void ClientServer::startMDNS() {
-	//Starts up MDNS
-	char hostString[16] = { 0 };
-	strcat(hostString, getDeviceHostName());
-	MDNS.begin(hostString);
-	MDNS.addService("UNI_FRAME", "tcp", 80); //Broadcasts IP so can be seen by other devices
+	DynamicJsonBuffer jsonBuffer;
+	JsonObject& json = jsonBuffer.createObject();
+	json["id"] = ESP.getChipId();
+	json["name"] = creds.load().hostname;
+	String jsonName;
+	json.printTo(jsonName);
 
-	MDNS.addServiceTxt("UNI_FRAME", "tcp", "id", (String)ESP.getChipId());
-	MDNS.addServiceTxt("UNI_FRAME", "tcp", "ip", WiFi.localIP().toString());
-	MDNS.addServiceTxt("UNI_FRAME", "tcp", "name", creds.load().hostname);
+	MDNS.begin(jsonName.c_str());
+	MDNS.addService("UNI_FRAME", "tcp", 80); //Broadcasts IP so can be seen by other devices
+}
+
+void ClientServer::checkinWithMaster() {
+	HTTPClient http;
+	http.begin("http://" + (String)MASTER_INFO.hostname + ":" + MASTER_PORT + "/checkin");
+	http.sendRequest("POST", getDeviceInfo());
 }
 
 bool ClientServer::electNewMaster() {
@@ -225,10 +229,9 @@ String ClientServer::getDeviceInfo() {
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject& json = jsonBuffer.createObject();
 
-	WiFiInfo info = creds.load();
 	json["id"] = ESP.getChipId();
 	json["ip"] = WiFi.localIP().toString();
-	json["name"] = info.hostname;
+	json["name"] = creds.load().hostname;
 
 	String result;
 	json.printTo(result);
