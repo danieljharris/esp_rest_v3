@@ -19,7 +19,7 @@ bool MasterServer::start() {
 	startMDNS();
 
 	Serial.println("Opening soft access point...");
-	WiFi.softAP(MASTER_SSID, MASTER_PASSWORD); //Starts access point for new devices to connect to
+	WiFi.softAP(MASTER_INFO.ssid, MASTER_INFO.password); //Starts access point for new devices to connect to
 
 	Serial.println("Enableing OTA updates...");
 	enableOTAUpdates();
@@ -163,8 +163,8 @@ void MasterServer::reDirect() {
 	}
 
 	HTTPClient http;
-	http.begin("http://" + ip + ":" + CLIENT_PORT + server.uri());
 	http.setTimeout(2000); //Reduced the timeout from 5000 to fail faster
+	http.begin("http://" + ip + ":" + CLIENT_PORT + server.uri());
 
 	int httpCode = http.sendRequest(getMethod(), payload);
 
@@ -259,7 +259,7 @@ bool MasterServer::validId() {
 }
 
 void MasterServer::startMDNS() {
-	MDNS.begin(MASTER_HOSTNAME); //Starts up MDNS
+	MDNS.begin(MASTER_INFO.hostname); //Starts up MDNS
 	MDNS.addService(MASTER_MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
 }
 

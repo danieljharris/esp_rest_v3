@@ -197,6 +197,7 @@ void ClientServer::startMDNS() {
 
 void ClientServer::checkinWithMaster() {
 	HTTPClient http;
+	http.setTimeout(2000); //Reduced the timeout from 5000 to fail faster
 	http.begin("http://" + masterIP + ":" + String(MASTER_PORT) + "/checkin");
 	http.sendRequest("POST", getDeviceInfo());
 	http.end();
@@ -244,7 +245,7 @@ bool ClientServer::findAndConnectToMaster() {
 	//Can the master access point be found?
 	if (findMaster()) {
 		//Can I connect to the master access point?
-		if (connectToWiFi(WiFiInfo(MASTER_SSID, MASTER_PASSWORD, MASTER_MDNS_ID))) {
+		if (connectToWiFi(MASTER_INFO)) {
 			//Can I get and save WiFi credentials from the master?
 			if (getAndSaveMainWiFiInfo()) {
 				//Can I connect to the WiFi router using the credentials?
@@ -257,8 +258,11 @@ bool ClientServer::findAndConnectToMaster() {
 bool ClientServer::findMaster() {
 	Serial.println("Entering findMaster");
 
-	for (int i = 0; i < WiFi.scanNetworks(); i++) {
-		if (WiFi.SSID(i).equals(MASTER_SSID)) return true;
+	String lookingFor = MASTER_INFO.ssid;
+	int foundNetworks = WiFi.scanNetworks();
+	for (int i = 0; i < foundNetworks; i++) {
+		String current_ssid = WiFi.SSID(i);
+		if (current_ssid.equals(lookingFor)) return true;
 	}
 	return false;
 }
@@ -272,15 +276,19 @@ bool ClientServer::getAndSaveMainWiFiInfo() {
 	http.begin(url);
 
 	if (http.GET() == HTTP_CODE_OK) {
+		String payload = http.getString();
+		http.end();
+
 		DynamicJsonBuffer jsonBuffer;
-		JsonObject& json = jsonBuffer.parseObject(http.getString());
+		JsonObject& json = jsonBuffer.parseObject(payload);
 		if (!json.success()) { return false; }
 		if (!json.containsKey("ssid") && !json.containsKey("password") && !json.containsKey("master_ip")) return false;
 
 		masterIP = json["master_ip"].asString();
-		creds.save(json["ssid"].asString(), json["password"].asString());
+		String ssid = json["ssid"].asString();
+		String password = json["password"].asString();
 
-		http.end();
+		creds.save(ssid, password);
 		return true;
 	}
 	else {
