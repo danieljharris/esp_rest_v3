@@ -39,6 +39,9 @@ bool MasterServer::start() {
 	return true;
 }
 
+void MasterServer::update() { expireClientLookup(); }
+
+//Master endpoints
 void MasterServer::addEndpoints() {
 	for (std::vector<Endpoint>::iterator it = masterEndpoints.begin(); it != masterEndpoints.end(); ++it) {
 		server.on(it->path, it->method, it->function);
@@ -64,7 +67,6 @@ void MasterServer::addUnknownEndpoint()
 	};
 	server.onNotFound(lambda);
 }
-
 std::function<void()> MasterServer::handleMasterGetWiFiInfo() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleMasterGetWiFiInfo");
@@ -126,16 +128,26 @@ std::function<void()> MasterServer::handleMasterCheckin() {
 		}
 		server.send(HTTP_CODE_OK);
 
-		Device device;
+		Device device = Device();
 		device.id = json["id"].asString();
 		device.ip = ip;
 		device.name = json["name"].asString();
-		clientLookup.insert(device);
+
+		std::unordered_set<Device>::const_iterator found = clientLookup.find(device);
+		if (found != clientLookup.end()) found->timeout->reset();
+		else clientLookup.insert(device);
 	};
 
 	return lambda;
 }
 
+//Master creation
+void MasterServer::startMDNS() {
+	MDNS.begin(MASTER_INFO.hostname); //Starts up MDNS
+	MDNS.addService(MASTER_MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
+}
+
+//REST request routing
 String MasterServer::getDeviceIPFromIdOrName(String idOrName) {
 	Serial.println("idOrName:" + idOrName);
 	for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
@@ -143,7 +155,6 @@ String MasterServer::getDeviceIPFromIdOrName(String idOrName) {
 	}
 	return "";
 }
-
 void MasterServer::reDirect() {
 	String payload = server.arg("plain");
 
@@ -210,7 +221,17 @@ String MasterServer::reDirect(String ip) {
 		return reply;
 	}
 }
+void MasterServer::expireClientLookup() {
+	Serial.println("Handleing client expiring");
+	for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ) {
+		if (it->timeout->expired()) {
+			it = clientLookup.erase(it);
+		}
+		else ++it;
+	}
+}
 
+//Helper functions for REST routing
 const char* MasterServer::getMethod() {
 	const char* method;
 	switch (server.method()) {
@@ -224,7 +245,6 @@ const char* MasterServer::getMethod() {
 	}
 	return method;
 }
-
 bool MasterServer::isForMe() {
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
@@ -244,7 +264,6 @@ bool MasterServer::isForMe() {
 	}
 	else return false;
 }
-
 bool MasterServer::validId() {
 	bool isValid = true;
 	if (!server.hasArg("plain")) isValid = false;
@@ -256,34 +275,3 @@ bool MasterServer::validId() {
 	}
 	return isValid;
 }
-
-void MasterServer::startMDNS() {
-	MDNS.begin(MASTER_INFO.hostname); //Starts up MDNS
-	MDNS.addService(MASTER_MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
-}
-
-//void MasterServer::refreshLookup()
-//{
-//	Serial.println("Updating clientLookup");
-//
-//	//Clears known clients ready to repopulate the vector
-//	clientLookup.clear();
-//
-//	//Send out query for ESP_REST devices
-//	int devicesFound = MDNS.queryService(CLIENT_MDNS_ID, "tcp");
-//	for (int i = 0; i < devicesFound; ++i) {
-//		//Call the device's IP and its info
-//		String ip = MDNS.answerIP(i).toString();
-//		String reply = MDNS.answerHostname(i);
-//
-//		DynamicJsonBuffer jsonBuffer;
-//		JsonObject& json = jsonBuffer.parseObject(reply);
-//
-//		if (json.success() && json.containsKey("id") && json.containsKey("name")) {
-//			String id = json["id"].asString();
-//			String name = json["name"].asString();
-//			Device newDevice(id, ip, name);
-//			clientLookup.insert(newDevice);
-//		}
-//	}
-//}

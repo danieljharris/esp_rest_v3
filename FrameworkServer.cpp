@@ -1,9 +1,6 @@
 #include "FrameworkServer.h"
 
-FrameworkServer::~FrameworkServer()
-{
-	stop();
-}
+FrameworkServer::~FrameworkServer() { stop(); }
 
 void FrameworkServer::stop()
 {
@@ -33,10 +30,10 @@ void FrameworkServer::enableOTAUpdates() {
 	ArduinoOTA.setHostname(getDeviceHostName());
 
 	ArduinoOTA.onStart([]() {
-		Serial.println("OTA Started...");
+		Serial.println("OTA Update Started...");
 	});
 	ArduinoOTA.onEnd([]() {
-		Serial.println("\nOTA Ended!");
+		Serial.println("\nOTA Update Ended!");
 	});
 	ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
 		Serial.printf("Progress: %u%%\r\n", (progress / (total / 100)));

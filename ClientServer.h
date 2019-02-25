@@ -28,23 +28,24 @@ typedef struct Endpoint {
 
 class ClientServer : public FrameworkServer {
 private:
+	//Client endpoint handleing
 	void addEndpoints();
-
 	std::function<void()> handleClientGetInfo();
 	std::function<void()> handleClientSetDevice();
 	std::function<void()> handleClientSetName();
 	std::function<void()> handleClientSetWiFiCreds();
 
-	String masterIP = "";
-
+	//Client creation
 	void startMDNS();
-	void checkinWithMaster();
-
-	void electNewMaster();
-
 	bool findAndConnectToMaster();
 	bool findMaster();
 	bool getAndSaveMainWiFiInfo();
+
+	//Client to master handleing
+	String masterIP = "";
+	void checkinWithMaster();
+	bool updateMasterIP();
+	void electNewMaster();
 
 	//Power control
 	void power_toggle();
@@ -53,6 +54,7 @@ private:
 	bool gpioPinState = false;
 
 protected:
+	//Client endpoints
 	std::vector<Endpoint> clientEndpoints{
 		Endpoint("/device", HTTP_GET, handleClientGetInfo()),
 		Endpoint("/device", HTTP_POST, handleClientSetDevice()),
@@ -60,6 +62,7 @@ protected:
 		Endpoint("/credentials", HTTP_POST, handleClientSetWiFiCreds())
 	};
 
+	//General reusable functions for client & master servers
 	String getDeviceInfo();
 	bool connectToWiFi(WiFiInfo info);
 
