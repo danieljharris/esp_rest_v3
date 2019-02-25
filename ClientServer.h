@@ -35,6 +35,8 @@ private:
 	std::function<void()> handleClientSetName();
 	std::function<void()> handleClientSetWiFiCreds();
 
+	String masterIP = "";
+
 	void startMDNS();
 	void checkinWithMaster();
 

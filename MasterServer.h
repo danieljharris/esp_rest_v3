@@ -11,8 +11,6 @@
 
 #include "ClientServer.h"
 #include <ESP8266HTTPClient.h>
-#include <ESP8266mDNS.h>
-#include <ArduinoJson.h>
 
 typedef struct Device {
 	String id = "Unknown";
@@ -56,9 +54,6 @@ private:
 public:
 	bool start();
 	void update();
-
-	//MasterServer() {
-	//};
 };
 
 #endif

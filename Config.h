@@ -2,25 +2,17 @@
 #ifndef _CONFIG_h
 #define _CONFIG_h
 
-#include "WiFiCredentials.h"
-#include <IPAddress.h>
+#define MASTER_SSID "Universal-Framework"
+#define MASTER_PASSWORD "7kAtZZm9ak"
+#define MASTER_HOSTNAME "UniFrame"
 
-const WiFiInfo MASTER_INFO("Universal-Framework", "7kAtZZm9ak", "UniFrame");
+#define MASTER_MDNS_ID "UniFrameMaster"
+#define CLIENT_MDNS_ID "UniFrameClients"
 
-//const char* MDNS_ID = "UNI_FRAME";
+#define SETUP_PORT 80
+#define CLIENT_PORT 80
+#define MASTER_PORT 235
 
-const int SETUP_PORT = 80;
-const int CLIENT_PORT = 80;
-const int MASTER_PORT = 235;
-
-const int GPIO_PIN = 0;
-
-//#define MDNS_ID "UNI_FRAME"
-//
-//#define SETUP_PORT 80
-//#define CLIENT_PORT 80
-//#define MASTER_PORT 235
-//
-//#define GPIO_PIN 0
+#define GPIO_PIN 0
 
 #endif

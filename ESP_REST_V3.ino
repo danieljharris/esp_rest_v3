@@ -8,10 +8,10 @@
 /*
 	TODO:
 	() Add apidoc for endpoints
-	-() Find a way of refreshing clientLookup without removing master from it (No need to remove master)
 	-() Look into implementing SmartConfig to connect devices to router
 	-() Dont run turn on function if already on, and dont run turn off function if already off
 	DONE:
+	() Find a way of refreshing clientLookup without removing master from it (No need to remove master)
 	() Add functionality for custom circuit board and input detection (Like PC's ESP)
 	() Try to move some of the functions to seperate files (Get practice with hearder files)
 	() Try to reduce the sleep timers to make things faster
@@ -29,7 +29,7 @@
 
 FrameworkServer* server = new FrameworkServer;
 
-esp8266::polledTimeout::periodic period(1000 * 10); // Every 5 calls of loop (Default is 1000 = 1 loop)
+esp8266::polledTimeout::periodic period(1000 * 10); // Every 10 calls of loop (Default is 1000 = 1 loop)
 
 void setup() {
 	Serial.begin(19200);
@@ -37,7 +37,7 @@ void setup() {
 
 	server = new ClientServer();
 	if (!server->start()){
-		server = new MasterServer();
+		server = new MasterServer(); // ### Master should check for other masters using MDNS
 		if (!server->start()) {
 			server = new SetupServer(); // ### Should keep checking for master here?
 			if (!server->start()) {
@@ -53,28 +53,5 @@ void loop() {
 	ArduinoOTA.handle();
 
 	if (period) server->update();
-
-	//int lookupCountdownMax = 100000;
-	//int lookupCountdown = lookupCountdownMax;
-	//
-	//		if (lookupCountdown != 0) {
-	//			lookupCountdown--;
-	//		}
-	//		else {
-	//			lookupCountdown = lookupCountdownMax;
-	//			if (findMaster() == false) {
-	//				Serial.println("Could not find master, electing new one");
-	//				if (electNewMaster() == true) {
-	//					Serial.println("I am new master!");
-	//					setup();
-	//				}
-	//				else {
-	//					Serial.println("I am not the new master");
-	//					delay(20000); //Waits for 20 seconds for new master to connect
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
 }
 

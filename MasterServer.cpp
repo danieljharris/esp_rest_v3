@@ -19,7 +19,7 @@ bool MasterServer::start() {
 	startMDNS();
 
 	Serial.println("Opening soft access point...");
-	WiFi.softAP(MASTER_INFO.ssid, MASTER_INFO.password); //Starts access point for new devices to connect to
+	WiFi.softAP(MASTER_SSID, MASTER_PASSWORD); //Starts access point for new devices to connect to
 
 	Serial.println("Enableing OTA updates...");
 	enableOTAUpdates();
@@ -32,6 +32,8 @@ bool MasterServer::start() {
 
 	Serial.println("Starting server...");
 	server.begin(MASTER_PORT);
+
+	// ### Check for other masters
 	
 	refreshLookup();
 
@@ -77,6 +79,7 @@ std::function<void()> MasterServer::handleMasterGetWiFiInfo() {
 		WiFiInfo info = creds.load();
 		json["ssid"] = info.ssid;
 		json["password"] = info.password;
+		json["master_ip"] = WiFi.localIP().toString();
 
 		String content;
 		json.printTo(content);
@@ -120,11 +123,9 @@ std::function<void()> MasterServer::handleMasterCheckin() {
 		DynamicJsonBuffer jsonBuffer;
 		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
 		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return false; }
-		if (!json.containsKey("id") && !json.containsKey("name")) { server.send(HTTP_CODE_BAD_REQUEST); return false; }
+		if (!json.containsKey("id") || !json.containsKey("name")) { server.send(HTTP_CODE_BAD_REQUEST); return false; }
 
 		String ip = server.client().remoteIP().toString();
-		Serial.print("ip: ");
-		Serial.println(ip);
 
 		Device device;
 		device.ip = ip;
@@ -258,25 +259,23 @@ bool MasterServer::validId() {
 }
 
 void MasterServer::startMDNS() {
-	MDNS.begin(MASTER_INFO.hostname); //Starts up MDNS
+	MDNS.begin(MASTER_HOSTNAME); //Starts up MDNS
+	MDNS.addService(MASTER_MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
 }
 
 void MasterServer::refreshLookup()
 {
-	Serial.println("Entering refreshLookup");
+	Serial.println("Updating clientLookup");
 
 	//Clears known clients ready to repopulate the vector
 	clientLookup.clear();
 
 	//Send out query for ESP_REST devices
-	int devicesFound = MDNS.queryService("UNI_FRAME", "tcp");
+	int devicesFound = MDNS.queryService(CLIENT_MDNS_ID, "tcp");
 	for (int i = 0; i < devicesFound; ++i) {
 		//Call the device's IP and get its info
 		String ip = MDNS.answerIP(i).toString();
 		String reply = MDNS.answerHostname(i);
-
-		//Serial.println("ip: " + ip);
-		//Serial.println("reply: " + reply);
 
 		DynamicJsonBuffer jsonBuffer;
 		JsonObject& input = jsonBuffer.parseObject(reply);
