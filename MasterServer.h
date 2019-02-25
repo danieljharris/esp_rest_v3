@@ -11,9 +11,6 @@
 
 #include "ClientServer.h"
 #include <ESP8266HTTPClient.h>
-#include <ESP8266mDNS.h>
-#include <ArduinoJson.h>
-#include <vector>
 #include <unordered_set>
 
 typedef struct Device {

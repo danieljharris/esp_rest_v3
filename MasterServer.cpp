@@ -15,14 +15,8 @@ bool MasterServer::start() {
 	pinMode(GPIO_PIN, OUTPUT);
 	digitalWrite(GPIO_PIN, HIGH);
 
-	Serial.println("Starting MDNS...");
-	startMDNS();
-
 	Serial.println("Opening soft access point...");
 	WiFi.softAP(MASTER_INFO.ssid, MASTER_INFO.password); //Starts access point for new devices to connect to
-
-	Serial.println("Enableing OTA updates...");
-	enableOTAUpdates();
 
 	Serial.println("Adding endpoints...");
 	addEndpoints();
@@ -32,6 +26,12 @@ bool MasterServer::start() {
 
 	Serial.println("Starting server...");
 	server.begin(MASTER_PORT);
+
+	Serial.println("Starting MDNS...");
+	startMDNS();
+
+	Serial.println("Enableing OTA updates...");
+	enableOTAUpdates();
 
 	// ### Check for other masters
 
@@ -258,19 +258,8 @@ bool MasterServer::validId() {
 }
 
 void MasterServer::startMDNS() {
-	Serial.println("Here: 1");
-
-	char* hostname = "UniFrame";
-
-	Serial.println("Here: 2");
-	bool outcome = MDNS.begin(hostname); //Starts up MDNS
-	Serial.println("Here: 3");
-
-	Serial.print("outcome: ");
-	Serial.println(outcome);
-
-
-	//MDNS.addService("UniFrameMaster", "tcp", 80); //Broadcasts IP so can be seen by other devices
+	MDNS.begin(MASTER_INFO.hostname); //Starts up MDNS
+	MDNS.addService(MASTER_MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
 }
 
 //void MasterServer::refreshLookup()

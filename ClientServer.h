@@ -13,7 +13,6 @@
 #include "FrameworkServer.h"
 #include <ESP8266mDNS.h>
 #include <ArduinoJson.h>
-#include <vector>
 
 typedef struct Endpoint {
 	String path;

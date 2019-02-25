@@ -15,14 +15,8 @@ bool ClientServer::start() {
 	pinMode(GPIO_PIN, OUTPUT);
 	digitalWrite(GPIO_PIN, HIGH);
 
-	Serial.println("Starting MDNS...");
-	startMDNS();
-
 	Serial.println("Letting master know I exist...");
 	checkinWithMaster();
-
-	Serial.println("Enableing OTA updates...");
-	enableOTAUpdates();
 
 	Serial.println("Adding endpoints...");
 	addEndpoints();
@@ -32,6 +26,12 @@ bool ClientServer::start() {
 
 	Serial.println("Starting server...");
 	server.begin(CLIENT_PORT);
+
+	Serial.println("Starting MDNS...");
+	startMDNS();
+
+	Serial.println("Enableing OTA updates...");
+	enableOTAUpdates();
 
 	Serial.println("Ready!");
 	return true;
@@ -193,7 +193,6 @@ void ClientServer::startMDNS() {
 	String jsonName;
 	json.printTo(jsonName);
 
-	MDNS.end();
 	MDNS.begin(jsonName.c_str());
 	MDNS.addService(CLIENT_MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
 }
@@ -235,7 +234,7 @@ void ClientServer::electNewMaster() {
 	}
 	else {
 		Serial.println("I've been chosen to stay as a client");
-		delay(20000); //Waits for 20 seconds for new master to connect
+		delay(1000 * 10); //Waits for 10 seconds for new master to connect
 	}
 }
 String ClientServer::getDeviceInfo() {
