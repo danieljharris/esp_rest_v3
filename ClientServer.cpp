@@ -192,17 +192,19 @@ void ClientServer::startMDNS() {
 	json.printTo(jsonName);
 
 	MDNS.begin(jsonName.c_str());
-	MDNS.addService("UNI_FRAME", "tcp", 80); //Broadcasts IP so can be seen by other devices
+	MDNS.addService(CLIENT_MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
 }
 
 void ClientServer::checkinWithMaster() {
 	HTTPClient http;
-	http.begin("http://" + (String)MASTER_INFO.hostname + ":" + MASTER_PORT + "/checkin");
+	http.setTimeout(2000); //Reduced the timeout from 5000 to fail faster
+	http.begin("http://" + masterIP + ":" + String(MASTER_PORT) + "/checkin");
 	http.sendRequest("POST", getDeviceInfo());
+	http.end();
 }
 
 bool ClientServer::electNewMaster() {
-	Serial.print("Entering electNewMaster");
+	Serial.println("Entering electNewMaster");
 	//Initalises the chosen host name to the host name of the current device
 	String myHostName = getDeviceHostName();
 
@@ -210,17 +212,17 @@ bool ClientServer::electNewMaster() {
 
 	//Prints details for each service found
 	Serial.print("My host name: ");
-	Serial.print(chosenHostName);
-	Serial.print("Other host names: ");
+	Serial.println(chosenHostName);
+	Serial.println("Other host names: ");
 
 	//Send out query for ESP_REST devices
-	int devicesFound = MDNS.queryService("UNI_FRAME", "tcp");
+	int devicesFound = MDNS.queryService(CLIENT_MDNS_ID, "tcp");
 	for (int i = 0; i < devicesFound; ++i) {
 		String currentHostName = MDNS.hostname(i);
 		if (currentHostName > chosenHostName) {
 			chosenHostName = currentHostName;
 		}
-		Serial.print(currentHostName);
+		Serial.println(currentHostName);
 	}
 
 	return myHostName.equals(chosenHostName);
@@ -257,18 +259,9 @@ bool ClientServer::findMaster() {
 	Serial.println("Entering findMaster");
 
 	String lookingFor = MASTER_INFO.ssid;
-
-	Serial.print("Looking for: ");
-	Serial.println(lookingFor);
-
 	int foundNetworks = WiFi.scanNetworks();
-	Serial.println("I Found these networks:");
 	for (int i = 0; i < foundNetworks; i++) {
 		String current_ssid = WiFi.SSID(i);
-
-		Serial.print("SSID: ");
-		Serial.println(current_ssid);
-
 		if (current_ssid.equals(lookingFor)) return true;
 	}
 	return false;
@@ -284,15 +277,18 @@ bool ClientServer::getAndSaveMainWiFiInfo() {
 
 	if (http.GET() == HTTP_CODE_OK) {
 		String payload = http.getString();
+		http.end();
 
 		DynamicJsonBuffer jsonBuffer;
-		JsonObject& input = jsonBuffer.parseObject(payload);
-		String ssid = input["ssid"];
-		String password = input["password"];
+		JsonObject& json = jsonBuffer.parseObject(payload);
+		if (!json.success()) { return false; }
+		if (!json.containsKey("ssid") && !json.containsKey("password") && !json.containsKey("master_ip")) return false;
+
+		masterIP = json["master_ip"].asString();
+		String ssid = json["ssid"].asString();
+		String password = json["password"].asString();
 
 		creds.save(ssid, password);
-
-		http.end();
 		return true;
 	}
 	else {
@@ -353,3 +349,14 @@ void ClientServer::power_off() {
 	gpioPinState = false;
 	digitalWrite(GPIO_PIN, HIGH);
 }
+
+
+//if (MDNS.queryService(MASTER_MDNS_ID, "tcp") < 1) return;
+//String ip = MDNS.answerIP(0).toString();
+
+//bool ClientServer::findMasterMDNS() {
+//	Serial.println("Entering findMasterMDNS");
+//
+//	if (MDNS.queryService(MASTER_MDNS_ID, "tcp") < 1) return false;
+//	return true;
+//}
