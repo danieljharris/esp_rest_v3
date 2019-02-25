@@ -15,14 +15,8 @@ bool ClientServer::start() {
 	pinMode(GPIO_PIN, OUTPUT);
 	digitalWrite(GPIO_PIN, HIGH);
 
-	Serial.println("Starting MDNS...");
-	startMDNS();
-
 	Serial.println("Letting master know I exist...");
 	checkinWithMaster();
-
-	Serial.println("Enableing OTA updates...");
-	enableOTAUpdates();
 
 	Serial.println("Adding endpoints...");
 	addEndpoints();
@@ -33,16 +27,24 @@ bool ClientServer::start() {
 	Serial.println("Starting server...");
 	server.begin(CLIENT_PORT);
 
+	Serial.println("Starting MDNS...");
+	startMDNS();
+
+	Serial.println("Enableing OTA updates...");
+	enableOTAUpdates();
+
 	Serial.println("Ready!");
 	return true;
 }
 
+void ClientServer::update() { checkinWithMaster(); }
+
+//Client endpoints
 void ClientServer::addEndpoints() {
 	for (std::vector<Endpoint>::iterator it = clientEndpoints.begin(); it != clientEndpoints.end(); ++it) {
 		server.on(it->path, it->method, it->function);
 	}
 }
-
 std::function<void()> ClientServer::handleClientGetInfo() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleClientGetInfo");
@@ -183,6 +185,7 @@ std::function<void()> ClientServer::handleClientSetWiFiCreds() {
 	return lambda;
 }
 
+//Client creation
 void ClientServer::startMDNS() {
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject& json = jsonBuffer.createObject();
@@ -194,53 +197,6 @@ void ClientServer::startMDNS() {
 	MDNS.begin(jsonName.c_str());
 	MDNS.addService(CLIENT_MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
 }
-
-void ClientServer::checkinWithMaster() {
-	HTTPClient http;
-	http.setTimeout(2000); //Reduced the timeout from 5000 to fail faster
-	http.begin("http://" + masterIP + ":" + String(MASTER_PORT) + "/checkin");
-	http.sendRequest("POST", getDeviceInfo());
-	http.end();
-}
-
-bool ClientServer::electNewMaster() {
-	Serial.println("Entering electNewMaster");
-	//Initalises the chosen host name to the host name of the current device
-	String myHostName = getDeviceHostName();
-
-	String chosenHostName = myHostName;
-
-	//Prints details for each service found
-	Serial.print("My host name: ");
-	Serial.println(chosenHostName);
-	Serial.println("Other host names: ");
-
-	//Send out query for ESP_REST devices
-	int devicesFound = MDNS.queryService(CLIENT_MDNS_ID, "tcp");
-	for (int i = 0; i < devicesFound; ++i) {
-		String currentHostName = MDNS.hostname(i);
-		if (currentHostName > chosenHostName) {
-			chosenHostName = currentHostName;
-		}
-		Serial.println(currentHostName);
-	}
-
-	return myHostName.equals(chosenHostName);
-}
-String ClientServer::getDeviceInfo() {
-	DynamicJsonBuffer jsonBuffer;
-	JsonObject& json = jsonBuffer.createObject();
-
-	json["id"] = ESP.getChipId();
-	json["ip"] = WiFi.localIP().toString();
-	json["name"] = creds.load().hostname;
-
-	String result;
-	json.printTo(result);
-
-	return result;
-}
-
 bool ClientServer::findAndConnectToMaster() {
 	//Can the master access point be found?
 	if (findMaster()) {
@@ -298,6 +254,86 @@ bool ClientServer::getAndSaveMainWiFiInfo() {
 	}
 }
 
+//Client to master handleing
+void ClientServer::checkinWithMaster() {
+	Serial.println("Checking up on master");
+
+	HTTPClient http;
+	http.begin("http://" + masterIP + ":" + String(MASTER_PORT) + "/checkin");
+	int httpCode = http.sendRequest("POST", getDeviceInfo());
+	http.end();
+
+	if (httpCode != HTTP_CODE_OK && !updateMasterIP()) {
+		electNewMaster();
+	}
+}
+bool ClientServer::updateMasterIP() {
+	Serial.println("Entering updateMasterIP");
+
+	if (MDNS.queryService(MASTER_MDNS_ID, "tcp") < 1) return false;
+	else {
+		masterIP = MDNS.answerIP(0).toString();
+		return true;
+	}
+}
+void ClientServer::electNewMaster() {
+	Serial.println("Entering electNewMaster");
+
+	// ### Should call all other clients maybe?
+	// ### Might have issue with looping?
+
+	//Initalises the chosen id to the id of the current device
+	String myHostId = String(ESP.getChipId());
+	String chosenHostId = myHostId;
+
+	//Prints details for each service found
+	Serial.print("My host id: " + chosenHostId);
+	Serial.println("Other host ids: ");
+
+	//Query for client devices
+	int devicesFound = MDNS.queryService(CLIENT_MDNS_ID, "tcp");
+	for (int i = 0; i < devicesFound; ++i) {
+		String reply = MDNS.answerHostname(i);
+
+		DynamicJsonBuffer jsonBuffer;
+		JsonObject& json = jsonBuffer.parseObject(reply);
+
+		if (json.success() && json.containsKey("id")) {
+			String currentHostId = json["id"].asString();
+
+			Serial.println("id: " + currentHostId);
+
+			if (currentHostId > chosenHostId) {
+				chosenHostId = currentHostId;
+			}
+		}
+	}
+
+	if (myHostId.equals(chosenHostId)) {
+		Serial.println("I've been chosen as the new master");
+		MDNS.close();
+		ESP.restart();
+	}
+	else {
+		Serial.println("I've been chosen to stay as a client");
+		delay(1000 * 10); //Waits for 10 seconds for new master to connect
+	}
+}
+
+//General reusable functions for client & master servers
+String ClientServer::getDeviceInfo() {
+	DynamicJsonBuffer jsonBuffer;
+	JsonObject& json = jsonBuffer.createObject();
+
+	json["id"] = ESP.getChipId();
+	json["ip"] = WiFi.localIP().toString();
+	json["name"] = creds.load().hostname;
+
+	String result;
+	json.printTo(result);
+
+	return result;
+}
 bool ClientServer::connectToWiFi(WiFiInfo info) {
 	if (info.ssid == "" || info.password == "") {
 		Serial.println("Invalid WiFi credentials");
@@ -330,7 +366,7 @@ bool ClientServer::connectToWiFi(WiFiInfo info) {
 	return (WiFi.status() == WL_CONNECTED);
 }
 
-//Power control
+//Power controls
 void ClientServer::power_toggle() {
 	Serial.println("Entering power_toggle");
 
@@ -349,14 +385,3 @@ void ClientServer::power_off() {
 	gpioPinState = false;
 	digitalWrite(GPIO_PIN, HIGH);
 }
-
-
-//if (MDNS.queryService(MASTER_MDNS_ID, "tcp") < 1) return;
-//String ip = MDNS.answerIP(0).toString();
-
-//bool ClientServer::findMasterMDNS() {
-//	Serial.println("Entering findMasterMDNS");
-//
-//	if (MDNS.queryService(MASTER_MDNS_ID, "tcp") < 1) return false;
-//	return true;
-//}

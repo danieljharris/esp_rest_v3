@@ -15,14 +15,8 @@ bool MasterServer::start() {
 	pinMode(GPIO_PIN, OUTPUT);
 	digitalWrite(GPIO_PIN, HIGH);
 
-	Serial.println("Starting MDNS...");
-	startMDNS();
-
 	Serial.println("Opening soft access point...");
 	WiFi.softAP(MASTER_INFO.ssid, MASTER_INFO.password); //Starts access point for new devices to connect to
-
-	Serial.println("Enableing OTA updates...");
-	enableOTAUpdates();
 
 	Serial.println("Adding endpoints...");
 	addEndpoints();
@@ -33,16 +27,21 @@ bool MasterServer::start() {
 	Serial.println("Starting server...");
 	server.begin(MASTER_PORT);
 
+	Serial.println("Starting MDNS...");
+	startMDNS();
+
+	Serial.println("Enableing OTA updates...");
+	enableOTAUpdates();
+
 	// ### Check for other masters
-	
-	refreshLookup();
 
 	Serial.println("Ready!");
 	return true;
 }
 
-void MasterServer::update() { refreshLookup(); }
+void MasterServer::update() { expireClientLookup(); }
 
+//Master endpoints
 void MasterServer::addEndpoints() {
 	for (std::vector<Endpoint>::iterator it = masterEndpoints.begin(); it != masterEndpoints.end(); ++it) {
 		server.on(it->path, it->method, it->function);
@@ -68,7 +67,6 @@ void MasterServer::addUnknownEndpoint()
 	};
 	server.onNotFound(lambda);
 }
-
 std::function<void()> MasterServer::handleMasterGetWiFiInfo() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleMasterGetWiFiInfo");
@@ -99,7 +97,7 @@ std::function<void()> MasterServer::handleMasterGetDevices() {
 
 		devices.add(jsonBuffer.parseObject(getDeviceInfo()));
 
-		for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
+		for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
 			Device device = *it;
 			JsonObject& jsonDevice = jsonBuffer.createObject();
 			jsonDevice["id"] = device.id.toInt();
@@ -120,31 +118,43 @@ std::function<void()> MasterServer::handleMasterCheckin() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleMasterCheckin");
 
-		DynamicJsonBuffer jsonBuffer;
-		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
-		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return false; }
-		if (!json.containsKey("id") || !json.containsKey("name")) { server.send(HTTP_CODE_BAD_REQUEST); return false; }
-
 		String ip = server.client().remoteIP().toString();
 
-		Device device;
+		DynamicJsonBuffer jsonBuffer;
+		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+		if (!json.success() || !json.containsKey("id") || !json.containsKey("name")) {
+			server.send(HTTP_CODE_BAD_REQUEST);
+			return;
+		}
+		server.send(HTTP_CODE_OK);
+
+		Device device = Device();
+		device.id = json["id"].asString();
 		device.ip = ip;
-		if (json.containsKey("id")) device.id = json["id"].asString();
-		if (json.containsKey("name")) device.name = json["name"].asString();
-		clientLookup.push_back(device);
+		device.name = json["name"].asString();
+
+		std::unordered_set<Device>::const_iterator found = clientLookup.find(device);
+		if (found != clientLookup.end()) found->timeout->reset();
+		else clientLookup.insert(device);
 	};
 
 	return lambda;
 }
 
+//Master creation
+void MasterServer::startMDNS() {
+	MDNS.begin(MASTER_INFO.hostname); //Starts up MDNS
+	MDNS.addService(MASTER_MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
+}
+
+//REST request routing
 String MasterServer::getDeviceIPFromIdOrName(String idOrName) {
 	Serial.println("idOrName:" + idOrName);
-	for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
+	for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
 		if (it->id.equals(idOrName) || it->name.equals(idOrName)) return it->ip;
 	}
 	return "";
 }
-
 void MasterServer::reDirect() {
 	String payload = server.arg("plain");
 
@@ -173,7 +183,7 @@ void MasterServer::reDirect() {
 		http.end();
 
 		//If client can not be reached it is removed from the clientLookup
-		for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
+		for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
 			if (it->ip.equals(ip)) {
 				clientLookup.erase(it);
 				break;
@@ -211,7 +221,17 @@ String MasterServer::reDirect(String ip) {
 		return reply;
 	}
 }
+void MasterServer::expireClientLookup() {
+	Serial.println("Handleing client expiring");
+	for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ) {
+		if (it->timeout->expired()) {
+			it = clientLookup.erase(it);
+		}
+		else ++it;
+	}
+}
 
+//Helper functions for REST routing
 const char* MasterServer::getMethod() {
 	const char* method;
 	switch (server.method()) {
@@ -225,7 +245,6 @@ const char* MasterServer::getMethod() {
 	}
 	return method;
 }
-
 bool MasterServer::isForMe() {
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
@@ -245,7 +264,6 @@ bool MasterServer::isForMe() {
 	}
 	else return false;
 }
-
 bool MasterServer::validId() {
 	bool isValid = true;
 	if (!server.hasArg("plain")) isValid = false;
@@ -256,31 +274,4 @@ bool MasterServer::validId() {
 		else if (!json.containsKey("id") && !json.containsKey("name")) isValid = false;
 	}
 	return isValid;
-}
-
-void MasterServer::startMDNS() {
-	MDNS.begin(MASTER_INFO.hostname); //Starts up MDNS
-	MDNS.addService(MASTER_MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
-}
-
-void MasterServer::refreshLookup()
-{
-	Serial.println("Updating clientLookup");
-
-	//Clears known clients ready to repopulate the vector
-	clientLookup.clear();
-
-	//Send out query for ESP_REST devices
-	int devicesFound = MDNS.queryService(CLIENT_MDNS_ID, "tcp");
-	for (int i = 0; i < devicesFound; ++i) {
-		//Call the device's IP and get its info
-		String ip = MDNS.answerIP(i).toString();
-		String reply = MDNS.answerHostname(i);
-
-		DynamicJsonBuffer jsonBuffer;
-		JsonObject& input = jsonBuffer.parseObject(reply);
-
-		Device newDevice(input["id"].asString(), ip, input["name"].asString());
-		clientLookup.push_back(newDevice);
-	}
 }
