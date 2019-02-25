@@ -11,6 +11,10 @@
 
 #include "ClientServer.h"
 #include <ESP8266HTTPClient.h>
+#include <ESP8266mDNS.h>
+#include <ArduinoJson.h>
+#include <vector>
+#include <unordered_set>
 
 typedef struct Device {
 	String id = "Unknown";
@@ -23,6 +27,21 @@ typedef struct Device {
 		this->ip = ip;
 		this->name = name;
 	}
+
+	//Used by unordered_set (clientLookup) to compare devices
+	bool operator==(const Device& device) const {
+		if (id == device.id) return true;
+		else return false;
+	}
+};
+
+//Used by unordered_set (clientLookup) to make a hash of each device
+namespace std {
+	template<> struct hash<Device> {
+		size_t operator()(const Device& device) const {
+			return hash<int>()(device.id.toInt());
+		}
+	};
 };
 
 class MasterServer : public ClientServer {
@@ -48,12 +67,11 @@ private:
 	bool validId();
 
 	void startMDNS();
-	void refreshLookup();
-	std::vector<Device> clientLookup;
+
+	std::unordered_set<Device> clientLookup;
 
 public:
 	bool start();
-	void update();
 };
 
 #endif

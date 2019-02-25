@@ -13,6 +13,7 @@
 #include "FrameworkServer.h"
 #include <ESP8266mDNS.h>
 #include <ArduinoJson.h>
+#include <vector>
 
 typedef struct Endpoint {
 	String path;
@@ -40,10 +41,11 @@ private:
 	void startMDNS();
 	void checkinWithMaster();
 
-	bool electNewMaster();
-	bool getAndSaveMainWiFiInfo();
+	void electNewMaster();
+
 	bool findAndConnectToMaster();
 	bool findMaster();
+	bool getAndSaveMainWiFiInfo();
 
 	//Power control
 	void power_toggle();
@@ -64,6 +66,7 @@ protected:
 
 public:
 	bool start();
+	void update();
 };
 
 #endif

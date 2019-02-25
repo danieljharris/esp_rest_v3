@@ -34,14 +34,10 @@ bool MasterServer::start() {
 	server.begin(MASTER_PORT);
 
 	// ### Check for other masters
-	
-	refreshLookup();
 
 	Serial.println("Ready!");
 	return true;
 }
-
-void MasterServer::update() { refreshLookup(); }
 
 void MasterServer::addEndpoints() {
 	for (std::vector<Endpoint>::iterator it = masterEndpoints.begin(); it != masterEndpoints.end(); ++it) {
@@ -99,7 +95,7 @@ std::function<void()> MasterServer::handleMasterGetDevices() {
 
 		devices.add(jsonBuffer.parseObject(getDeviceInfo()));
 
-		for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
+		for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
 			Device device = *it;
 			JsonObject& jsonDevice = jsonBuffer.createObject();
 			jsonDevice["id"] = device.id.toInt();
@@ -120,18 +116,21 @@ std::function<void()> MasterServer::handleMasterCheckin() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleMasterCheckin");
 
-		DynamicJsonBuffer jsonBuffer;
-		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
-		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return false; }
-		if (!json.containsKey("id") || !json.containsKey("name")) { server.send(HTTP_CODE_BAD_REQUEST); return false; }
-
 		String ip = server.client().remoteIP().toString();
 
+		DynamicJsonBuffer jsonBuffer;
+		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+		if (!json.success() || !json.containsKey("id") || !json.containsKey("name")) {
+			server.send(HTTP_CODE_BAD_REQUEST);
+			return;
+		}
+		server.send(HTTP_CODE_OK);
+
 		Device device;
+		device.id = json["id"].asString();
 		device.ip = ip;
-		if (json.containsKey("id")) device.id = json["id"].asString();
-		if (json.containsKey("name")) device.name = json["name"].asString();
-		clientLookup.push_back(device);
+		device.name = json["name"].asString();
+		clientLookup.insert(device);
 	};
 
 	return lambda;
@@ -139,7 +138,7 @@ std::function<void()> MasterServer::handleMasterCheckin() {
 
 String MasterServer::getDeviceIPFromIdOrName(String idOrName) {
 	Serial.println("idOrName:" + idOrName);
-	for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
+	for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
 		if (it->id.equals(idOrName) || it->name.equals(idOrName)) return it->ip;
 	}
 	return "";
@@ -173,7 +172,7 @@ void MasterServer::reDirect() {
 		http.end();
 
 		//If client can not be reached it is removed from the clientLookup
-		for (std::vector<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
+		for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
 			if (it->ip.equals(ip)) {
 				clientLookup.erase(it);
 				break;
@@ -259,28 +258,43 @@ bool MasterServer::validId() {
 }
 
 void MasterServer::startMDNS() {
-	MDNS.begin(MASTER_INFO.hostname); //Starts up MDNS
-	MDNS.addService(MASTER_MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
+	Serial.println("Here: 1");
+
+	char* hostname = "UniFrame";
+
+	Serial.println("Here: 2");
+	bool outcome = MDNS.begin(hostname); //Starts up MDNS
+	Serial.println("Here: 3");
+
+	Serial.print("outcome: ");
+	Serial.println(outcome);
+
+
+	//MDNS.addService("UniFrameMaster", "tcp", 80); //Broadcasts IP so can be seen by other devices
 }
 
-void MasterServer::refreshLookup()
-{
-	Serial.println("Updating clientLookup");
-
-	//Clears known clients ready to repopulate the vector
-	clientLookup.clear();
-
-	//Send out query for ESP_REST devices
-	int devicesFound = MDNS.queryService(CLIENT_MDNS_ID, "tcp");
-	for (int i = 0; i < devicesFound; ++i) {
-		//Call the device's IP and get its info
-		String ip = MDNS.answerIP(i).toString();
-		String reply = MDNS.answerHostname(i);
-
-		DynamicJsonBuffer jsonBuffer;
-		JsonObject& input = jsonBuffer.parseObject(reply);
-
-		Device newDevice(input["id"].asString(), ip, input["name"].asString());
-		clientLookup.push_back(newDevice);
-	}
-}
+//void MasterServer::refreshLookup()
+//{
+//	Serial.println("Updating clientLookup");
+//
+//	//Clears known clients ready to repopulate the vector
+//	clientLookup.clear();
+//
+//	//Send out query for ESP_REST devices
+//	int devicesFound = MDNS.queryService(CLIENT_MDNS_ID, "tcp");
+//	for (int i = 0; i < devicesFound; ++i) {
+//		//Call the device's IP and its info
+//		String ip = MDNS.answerIP(i).toString();
+//		String reply = MDNS.answerHostname(i);
+//
+//		DynamicJsonBuffer jsonBuffer;
+//		JsonObject& json = jsonBuffer.parseObject(reply);
+//
+//		if (json.success() && json.containsKey("id") && json.containsKey("name")) {
+//			String id = json["id"].asString();
+//			String name = json["name"].asString();
+//			Device newDevice(id, ip, name);
+//			clientLookup.insert(newDevice);
+//		}
+//	}
+//}

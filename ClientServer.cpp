@@ -37,6 +37,8 @@ bool ClientServer::start() {
 	return true;
 }
 
+void ClientServer::update() { }
+
 void ClientServer::addEndpoints() {
 	for (std::vector<Endpoint>::iterator it = clientEndpoints.begin(); it != clientEndpoints.end(); ++it) {
 		server.on(it->path, it->method, it->function);
@@ -191,28 +193,31 @@ void ClientServer::startMDNS() {
 	String jsonName;
 	json.printTo(jsonName);
 
+	MDNS.end();
 	MDNS.begin(jsonName.c_str());
 	MDNS.addService(CLIENT_MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
 }
 
 void ClientServer::checkinWithMaster() {
 	HTTPClient http;
-	http.setTimeout(2000); //Reduced the timeout from 5000 to fail faster
 	http.begin("http://" + masterIP + ":" + String(MASTER_PORT) + "/checkin");
-	http.sendRequest("POST", getDeviceInfo());
+	int httpCode = http.sendRequest("POST", getDeviceInfo());
 	http.end();
+
+	if (httpCode != HTTP_CODE_OK && !findAndConnectToMaster()) {
+		electNewMaster();
+	}
 }
 
-bool ClientServer::electNewMaster() {
+void ClientServer::electNewMaster() {
 	Serial.println("Entering electNewMaster");
+
 	//Initalises the chosen host name to the host name of the current device
 	String myHostName = getDeviceHostName();
-
 	String chosenHostName = myHostName;
 
 	//Prints details for each service found
-	Serial.print("My host name: ");
-	Serial.println(chosenHostName);
+	Serial.print("My host name: " + chosenHostName);
 	Serial.println("Other host names: ");
 
 	//Send out query for ESP_REST devices
@@ -225,7 +230,13 @@ bool ClientServer::electNewMaster() {
 		Serial.println(currentHostName);
 	}
 
-	return myHostName.equals(chosenHostName);
+	if (myHostName.equals(chosenHostName)) {
+		Serial.println("I've been chosen as the new master");
+	}
+	else {
+		Serial.println("I've been chosen to stay as a client");
+		delay(20000); //Waits for 20 seconds for new master to connect
+	}
 }
 String ClientServer::getDeviceInfo() {
 	DynamicJsonBuffer jsonBuffer;
