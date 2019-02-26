@@ -67,6 +67,7 @@ private:
 
 	//Master creation
 	void startMDNS();
+	bool anotherMasterExists();
 
 	//REST request routing
 	std::unordered_set<Device> clientLookup;

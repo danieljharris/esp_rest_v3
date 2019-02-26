@@ -184,6 +184,45 @@ std::function<void()> ClientServer::handleClientSetWiFiCreds() {
 	};
 	return lambda;
 }
+std::function<void()> ClientServer::handleClientRestart()
+{
+	std::function<void()> lambda = [=]() {
+		Serial.println("Entering handleClientRestart");
+		server.send(HTTP_CODE_OK);
+		ESP.restart();
+	};
+	return lambda;
+}
+std::function<void()> ClientServer::handleClientNewMaster()
+{
+	std::function<void()> lambda = [=]() {
+		Serial.println("Entering handleClientNewMaster");
+
+		if (!server.hasArg("plain")) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+		DynamicJsonBuffer jsonBuffer;
+		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+		if (!json.containsKey("ip")) {
+			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"ip_fields_missing\"}");
+			return;
+		}
+
+		String newMasterIP = json["ip"].asString();
+		masterIP = newMasterIP;
+
+		if (json.containsKey("delay_seconds")) {
+			int delaySeconds = json["delay_seconds"].as<int>();
+			if (delaySeconds > 10) delaySeconds = 10; //Max of 10 seconds
+
+			Serial.print("Sleeping for seconds: ");
+			Serial.println(delaySeconds);
+			delay(1000 * delaySeconds); //1000 = 1 second
+		}
+
+		server.send(HTTP_CODE_OK);
+	};
+	return lambda;
+}
 
 //Client creation
 void ClientServer::startMDNS() {
@@ -194,6 +233,7 @@ void ClientServer::startMDNS() {
 	String jsonName;
 	json.printTo(jsonName);
 
+	MDNS.close();
 	MDNS.begin(jsonName.c_str());
 	MDNS.addService(CLIENT_MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
 }
@@ -279,45 +319,64 @@ bool ClientServer::updateMasterIP() {
 void ClientServer::electNewMaster() {
 	Serial.println("Entering electNewMaster");
 
-	// ### Should call all other clients maybe?
-	// ### Might have issue with looping?
-
 	//Initalises the chosen id to the id of the current device
-	String myHostId = String(ESP.getChipId());
-	String chosenHostId = myHostId;
+	String myId = String(ESP.getChipId());
+	String chosenId = myId;
 
-	//Prints details for each service found
-	Serial.print("My host id: " + chosenHostId);
-	Serial.println("Other host ids: ");
+	std::vector<String> clientIPs;
 
 	//Query for client devices
 	int devicesFound = MDNS.queryService(CLIENT_MDNS_ID, "tcp");
 	for (int i = 0; i < devicesFound; ++i) {
+		//Saves IPs for use when becoming master later
+		clientIPs.push_back(MDNS.answerIP(i).toString());
+
 		String reply = MDNS.answerHostname(i);
 
 		DynamicJsonBuffer jsonBuffer;
 		JsonObject& json = jsonBuffer.parseObject(reply);
 
 		if (json.success() && json.containsKey("id")) {
-			String currentHostId = json["id"].asString();
+			String currentId = json["id"].asString();
 
-			Serial.println("id: " + currentHostId);
-
-			if (currentHostId > chosenHostId) {
-				chosenHostId = currentHostId;
+			if (currentId > chosenId) {
+				chosenId = currentId;
 			}
 		}
 	}
 
-	if (myHostId.equals(chosenHostId)) {
+	if (myId.equals(chosenId)) {
 		Serial.println("I've been chosen as the new master");
-		MDNS.close();
-		ESP.restart();
+		becomeMaster(clientIPs);
 	}
 	else {
 		Serial.println("I've been chosen to stay as a client");
-		delay(1000 * 10); //Waits for 10 seconds for new master to connect
 	}
+}
+void ClientServer::becomeMaster(std::vector<String> clientIPs) {
+	DynamicJsonBuffer jsonBuffer;
+	JsonObject& json = jsonBuffer.createObject();
+	json["ip"] = WiFi.localIP().toString();
+	json["delay_seconds"] = 10;
+
+	String result;
+	json.printTo(result);
+
+	//Notifies all clients that this device will be the new master
+	for (std::vector<String>::iterator it = clientIPs.begin(); it != clientIPs.end(); ++it) {
+
+		Serial.println("Letting know I'm about to be master: " + *it);
+
+		HTTPClient http;
+		//Increase the timeout from 5000 to allow other clients to go through the electNewMaster steps
+		http.setTimeout(7000);
+		http.begin("http://" + *it + ":" + CLIENT_PORT + "/master");
+		http.sendRequest("POST", result);
+		http.end();
+	}
+
+	MDNS.close();
+	ESP.restart();
 }
 
 //General reusable functions for client & master servers
