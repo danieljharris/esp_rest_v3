@@ -159,17 +159,27 @@ bool MasterServer::anotherMasterExists() {
 	Serial.println("Checking for duplicate master...");
 
 	//Initalises the chosen id to the id of the current device
-	String myIp = WiFi.localIP().toString();
-	String chosenIp = myIp;
+	String myId = String(ESP.getChipId());
+	String chosenId = myId;
 
 	//Query for client devices
 	int devicesFound = MDNS.queryService(MASTER_MDNS_ID, "tcp");
 	for (int i = 0; i < devicesFound; ++i) {
-		String currentIp = MDNS.answerIP(i).toString();
-		if (currentIp > chosenIp) chosenIp = currentIp;
+		String reply = MDNS.answerHostname(i);
+
+		DynamicJsonBuffer jsonBuffer;
+		JsonObject& json = jsonBuffer.parseObject(reply);
+
+		if (json.success() && json.containsKey("id")) {
+			String currentId = json["id"].asString();
+
+			if (currentId > chosenId) {
+				chosenId = currentId;
+			}
+		}
 	}
 
-	if (myIp.equals(chosenIp)) {
+	if (myId.equals(chosenId)) {
 		Serial.println("I've been chosen to stay as master");
 		MDNS.setHostname(MASTER_INFO.hostname);
 		MDNS.notifyAPChange();
@@ -257,11 +267,6 @@ String MasterServer::reDirect(String ip) {
 	}
 }
 void MasterServer::expireClientLookup() {
-	
-	
-	// ### Can maybe move this logic into when the clientLookup is read from
-
-
 	Serial.println("Handleing client expiring");
 	for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ) {
 		if (it->timeout->expired()) {

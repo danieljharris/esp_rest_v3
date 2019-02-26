@@ -325,10 +325,6 @@ void ClientServer::electNewMaster() {
 
 	std::vector<String> clientIPs;
 
-	//Prints details for each service found
-	Serial.println("My id: " + chosenId);
-	Serial.println("Other ids: ");
-
 	//Query for client devices
 	int devicesFound = MDNS.queryService(CLIENT_MDNS_ID, "tcp");
 	for (int i = 0; i < devicesFound; ++i) {
@@ -342,8 +338,6 @@ void ClientServer::electNewMaster() {
 
 		if (json.success() && json.containsKey("id")) {
 			String currentId = json["id"].asString();
-
-			Serial.println("id: " + currentId);
 
 			if (currentId > chosenId) {
 				chosenId = currentId;
