@@ -2,7 +2,9 @@
 #include "Setupserver.h"
 #include "ClientServer.h"
 #include "MasterServer.h"
+
 #include <ArduinoOTA.h>
+#include <ESP8266mDNS.h>
 #include <PolledTimeout.h>
 
 /*
@@ -29,7 +31,8 @@
 
 FrameworkServer* server = new FrameworkServer;
 
-esp8266::polledTimeout::periodic period(1000 * 10); //The frequency to call server update (1000 = 1 second)
+//The frequency to call server update (1000 = 1 second)
+esp8266::polledTimeout::periodic period(1000 * 10);
 
 void setup() {
 	Serial.begin(19200);
@@ -37,7 +40,7 @@ void setup() {
 
 	server = new ClientServer();
 	if (!server->start()){
-		server = new MasterServer(); // ### Master should check for other masters using MDNS
+		server = new MasterServer();
 		if (!server->start()) {
 			server = new SetupServer(); // ### Should keep checking for master here?
 			if (!server->start()) {

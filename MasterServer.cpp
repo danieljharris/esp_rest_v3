@@ -33,13 +33,14 @@ bool MasterServer::start() {
 	Serial.println("Enableing OTA updates...");
 	enableOTAUpdates();
 
-	// ### Check for other masters
-
 	Serial.println("Ready!");
 	return true;
 }
 
-void MasterServer::update() { expireClientLookup(); }
+void MasterServer::update() {
+	expireClientLookup();
+	anotherMasterExists();
+}
 
 //Master endpoints
 void MasterServer::addEndpoints() {
@@ -143,8 +144,42 @@ std::function<void()> MasterServer::handleMasterCheckin() {
 
 //Master creation
 void MasterServer::startMDNS() {
-	MDNS.begin(MASTER_INFO.hostname); //Starts up MDNS
+	DynamicJsonBuffer jsonBuffer;
+	JsonObject& json = jsonBuffer.createObject();
+	json["id"] = ESP.getChipId();
+	json["name"] = creds.load().hostname;
+	String jsonName;
+	json.printTo(jsonName);
+
+	MDNS.close();
+	MDNS.begin(jsonName.c_str());
 	MDNS.addService(MASTER_MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
+}
+bool MasterServer::anotherMasterExists() {
+	Serial.println("Checking for duplicate master...");
+
+	//Initalises the chosen id to the id of the current device
+	String myIp = WiFi.localIP().toString();
+	String chosenIp = myIp;
+
+	//Query for client devices
+	int devicesFound = MDNS.queryService(MASTER_MDNS_ID, "tcp");
+	for (int i = 0; i < devicesFound; ++i) {
+		String currentIp = MDNS.answerIP(i).toString();
+		if (currentIp > chosenIp) chosenIp = currentIp;
+	}
+
+	if (myIp.equals(chosenIp)) {
+		Serial.println("I've been chosen to stay as master");
+		MDNS.setHostname(MASTER_INFO.hostname);
+		MDNS.notifyAPChange();
+		MDNS.update();
+	}
+	else {
+		Serial.println("Another master exists, turning into client");
+		MDNS.close();
+		ESP.restart();
+	}
 }
 
 //REST request routing
@@ -222,6 +257,11 @@ String MasterServer::reDirect(String ip) {
 	}
 }
 void MasterServer::expireClientLookup() {
+	
+	
+	// ### Can maybe move this logic into when the clientLookup is read from
+
+
 	Serial.println("Handleing client expiring");
 	for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ) {
 		if (it->timeout->expired()) {

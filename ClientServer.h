@@ -34,6 +34,8 @@ private:
 	std::function<void()> handleClientSetDevice();
 	std::function<void()> handleClientSetName();
 	std::function<void()> handleClientSetWiFiCreds();
+	std::function<void()> handleClientRestart();
+	std::function<void()> handleClientNewMaster();
 
 	//Client creation
 	void startMDNS();
@@ -46,6 +48,7 @@ private:
 	void checkinWithMaster();
 	bool updateMasterIP();
 	void electNewMaster();
+	void becomeMaster(std::vector<String> clientIPs);
 
 	//Power control
 	void power_toggle();
@@ -59,7 +62,9 @@ protected:
 		Endpoint("/device", HTTP_GET, handleClientGetInfo()),
 		Endpoint("/device", HTTP_POST, handleClientSetDevice()),
 		Endpoint("/name", HTTP_POST, handleClientSetName()),
-		Endpoint("/credentials", HTTP_POST, handleClientSetWiFiCreds())
+		Endpoint("/credentials", HTTP_POST, handleClientSetWiFiCreds()),
+		Endpoint("/restart", HTTP_POST, handleClientRestart()),
+		Endpoint("/master", HTTP_POST, handleClientNewMaster())
 	};
 
 	//General reusable functions for client & master servers
