@@ -9,7 +9,7 @@ bool ClientServer::start() {
 		Serial.println("Failed to become client");
 		return false;
 	}
-	else Serial.println("I am a client");
+	else Serial.println("I am a client!");
 
 	//Sets the ESP's output pin to OFF
 	pinMode(GPIO_PIN, OUTPUT);
@@ -57,8 +57,10 @@ std::function<void()> ClientServer::handleClientSetDevice() {
 		Serial.println("Entering handleClientSetDevice");
 
 		if (!server.hasArg("plain")) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+
 		DynamicJsonBuffer jsonBuffer;
 		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+
 		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return; }
 		if (!json.containsKey("action")) {
 			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"action_field_missing\"}");
@@ -122,8 +124,10 @@ std::function<void()> ClientServer::handleClientSetName() {
 		Serial.println("Entering handleClientSetName");
 
 		if (!server.hasArg("plain")) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+
 		DynamicJsonBuffer jsonBuffer;
 		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+
 		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return; }
 		if (!json.containsKey("new_name")) {
 			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"new_name_field_missing\"}");
@@ -152,8 +156,10 @@ std::function<void()> ClientServer::handleClientSetWiFiCreds() {
 		Serial.println("Entering handleClientSetWiFiCreds");
 
 		if (!server.hasArg("plain")) { server.send(HTTP_CODE_BAD_REQUEST); return;}
+
 		DynamicJsonBuffer jsonBuffer;
 		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+
 		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return; }
 		if (!json.containsKey("ssid") && !json.containsKey("ssid")) {
 			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"ssid_and_password_fields_missing\"}");
@@ -188,7 +194,31 @@ std::function<void()> ClientServer::handleClientRestart()
 {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleClientRestart");
+
+		//mDNS should not run during sleep
+		MDNS.close();
+
+		//Default sleep for 1 second
+		int delaySeconds = 1;
+
+		if (server.hasArg("plain")) {
+			DynamicJsonBuffer jsonBuffer;
+			JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+
+			if (json.success() && json.containsKey("delay_seconds")) {
+				delaySeconds = json["delay_seconds"].as<int>();
+				if (delaySeconds > 10) delaySeconds = 10; //Max of 10 seconds
+			}
+		}
+
+		//Default sleep partly in place to allow server to return here
 		server.send(HTTP_CODE_OK);
+
+		Serial.print("Sleeping for seconds: ");
+		Serial.println(delaySeconds);
+
+		delay(1000 * delaySeconds); //1000 = 1 second
+
 		ESP.restart();
 	};
 	return lambda;
@@ -199,13 +229,16 @@ std::function<void()> ClientServer::handleClientNewMaster()
 		Serial.println("Entering handleClientNewMaster");
 
 		if (!server.hasArg("plain")) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+
 		DynamicJsonBuffer jsonBuffer;
 		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+
 		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return; }
 		if (!json.containsKey("ip")) {
 			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"ip_fields_missing\"}");
 			return;
 		}
+		server.send(HTTP_CODE_OK);
 
 		String newMasterIP = json["ip"].asString();
 		masterIP = newMasterIP;
@@ -218,8 +251,6 @@ std::function<void()> ClientServer::handleClientNewMaster()
 			Serial.println(delaySeconds);
 			delay(1000 * delaySeconds); //1000 = 1 second
 		}
-
-		server.send(HTTP_CODE_OK);
 	};
 	return lambda;
 }
@@ -228,6 +259,7 @@ std::function<void()> ClientServer::handleClientNewMaster()
 void ClientServer::startMDNS() {
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject& json = jsonBuffer.createObject();
+
 	json["id"] = ESP.getChipId();
 	json["name"] = creds.load().hostname;
 	String jsonName;
@@ -258,7 +290,10 @@ bool ClientServer::findMaster() {
 	int foundNetworks = WiFi.scanNetworks();
 	for (int i = 0; i < foundNetworks; i++) {
 		String current_ssid = WiFi.SSID(i);
-		if (current_ssid.equals(lookingFor)) return true;
+
+		if (current_ssid.equals(lookingFor)) {
+			return true;
+		}
 	}
 	return false;
 }
@@ -277,8 +312,11 @@ bool ClientServer::getAndSaveMainWiFiInfo() {
 
 		DynamicJsonBuffer jsonBuffer;
 		JsonObject& json = jsonBuffer.parseObject(payload);
-		if (!json.success()) { return false; }
-		if (!json.containsKey("ssid") && !json.containsKey("password") && !json.containsKey("master_ip")) return false;
+
+		if (!json.success()) return false;
+		if (!json.containsKey("ssid") && !json.containsKey("password") && !json.containsKey("master_ip")) {
+			return false;
+		}
 
 		masterIP = json["master_ip"].asString();
 		String ssid = json["ssid"].asString();
@@ -310,10 +348,17 @@ void ClientServer::checkinWithMaster() {
 bool ClientServer::updateMasterIP() {
 	Serial.println("Entering updateMasterIP");
 
-	if (MDNS.queryService(MASTER_MDNS_ID, "tcp") < 1) return false;
+	if (MDNS.queryService(MASTER_MDNS_ID, "tcp") < 1) {
+		return false;
+	}
 	else {
-		masterIP = MDNS.answerIP(0).toString();
-		return true;
+		if (!MDNS.answerIP(0).isSet()) {
+			return false;
+		}
+		else {
+			masterIP = MDNS.answerIP(0).toString();
+			return true;
+		}
 	}
 }
 void ClientServer::electNewMaster() {
@@ -356,6 +401,7 @@ void ClientServer::electNewMaster() {
 void ClientServer::becomeMaster(std::vector<String> clientIPs) {
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject& json = jsonBuffer.createObject();
+
 	json["ip"] = WiFi.localIP().toString();
 	json["delay_seconds"] = 10;
 
@@ -364,11 +410,10 @@ void ClientServer::becomeMaster(std::vector<String> clientIPs) {
 
 	//Notifies all clients that this device will be the new master
 	for (std::vector<String>::iterator it = clientIPs.begin(); it != clientIPs.end(); ++it) {
-
 		Serial.println("Letting know I'm about to be master: " + *it);
 
 		HTTPClient http;
-		//Increase the timeout from 5000 to allow other clients to go through the electNewMaster steps
+		//Increase the timeout from 5000 to allow other clients to go through the electNewMaster stages
 		http.setTimeout(7000);
 		http.begin("http://" + *it + ":" + CLIENT_PORT + "/master");
 		http.sendRequest("POST", result);

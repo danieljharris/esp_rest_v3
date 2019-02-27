@@ -9,7 +9,7 @@ bool MasterServer::start() {
 		Serial.println("failed to become master, could not connect to wifi");
 		return false;
 	}
-	else Serial.println("I am the master");
+	else Serial.println("I am a master!");
 
 	//Sets the ESP's output pin to OFF
 	pinMode(GPIO_PIN, OUTPUT);
@@ -39,7 +39,7 @@ bool MasterServer::start() {
 
 void MasterServer::update() {
 	expireClientLookup();
-	anotherMasterExists();
+	checkForOtherMasters();
 }
 
 //Master endpoints
@@ -48,13 +48,13 @@ void MasterServer::addEndpoints() {
 		server.on(it->path, it->method, it->function);
 	}
 }
-void MasterServer::addUnknownEndpoint()
-{
+void MasterServer::addUnknownEndpoint() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleMasterUnknown / masterToClientEndpoint");
 
 		//If the request has no name/id or its name/id matches mine
 		if (!validId() || isForMe()) {
+			//Call my client endpoint if it exists
 			for (std::vector<Endpoint>::iterator it = clientEndpoints.begin(); it != clientEndpoints.end(); ++it) {
 				if (server.uri().equals(it->path) && server.method() == it->method) {
 					it->function();
@@ -101,9 +101,11 @@ std::function<void()> MasterServer::handleMasterGetDevices() {
 		for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
 			Device device = *it;
 			JsonObject& jsonDevice = jsonBuffer.createObject();
+
 			jsonDevice["id"] = device.id.toInt();
 			jsonDevice["ip"] = device.ip;
 			jsonDevice["name"] = device.name;
+
 			devices.add(jsonDevice);
 		}
 
@@ -119,10 +121,12 @@ std::function<void()> MasterServer::handleMasterCheckin() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleMasterCheckin");
 
+		//Gets the IP from the client calling
 		String ip = server.client().remoteIP().toString();
 
 		DynamicJsonBuffer jsonBuffer;
 		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+
 		if (!json.success() || !json.containsKey("id") || !json.containsKey("name")) {
 			server.send(HTTP_CODE_BAD_REQUEST);
 			return;
@@ -135,7 +139,16 @@ std::function<void()> MasterServer::handleMasterCheckin() {
 		device.name = json["name"].asString();
 
 		std::unordered_set<Device>::const_iterator found = clientLookup.find(device);
-		if (found != clientLookup.end()) found->timeout->reset();
+		
+		//If the device already exists in clientLookup just refresh it's timeout
+		if (found != clientLookup.end()) {
+			//If the device exists, but has a different name, replace it
+			if (!found->name.equals(device.name)) {
+				clientLookup.erase(found);
+				clientLookup.insert(device);
+			}
+			else found->timeout->reset();
+		}
 		else clientLookup.insert(device);
 	};
 
@@ -146,8 +159,10 @@ std::function<void()> MasterServer::handleMasterCheckin() {
 void MasterServer::startMDNS() {
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject& json = jsonBuffer.createObject();
+
 	json["id"] = ESP.getChipId();
 	json["name"] = creds.load().hostname;
+
 	String jsonName;
 	json.printTo(jsonName);
 
@@ -155,16 +170,19 @@ void MasterServer::startMDNS() {
 	MDNS.begin(jsonName.c_str());
 	MDNS.addService(MASTER_MDNS_ID, "tcp", 80); //Broadcasts IP so can be seen by other devices
 }
-bool MasterServer::anotherMasterExists() {
+void MasterServer::checkForOtherMasters() {
 	Serial.println("Checking for duplicate master...");
 
 	//Initalises the chosen id to the id of the current device
 	String myId = String(ESP.getChipId());
 	String chosenId = myId;
 
+	std::vector<String> masterIPs;
+
 	//Query for client devices
 	int devicesFound = MDNS.queryService(MASTER_MDNS_ID, "tcp");
 	for (int i = 0; i < devicesFound; ++i) {
+		masterIPs.push_back(MDNS.answerIP(i).toString());
 		String reply = MDNS.answerHostname(i);
 
 		DynamicJsonBuffer jsonBuffer;
@@ -181,15 +199,36 @@ bool MasterServer::anotherMasterExists() {
 
 	if (myId.equals(chosenId)) {
 		Serial.println("I've been chosen to stay as master");
-		MDNS.setHostname(MASTER_INFO.hostname);
-		MDNS.notifyAPChange();
-		MDNS.update();
+		closeOtherMasters(masterIPs);
 	}
 	else {
 		Serial.println("Another master exists, turning into client");
-		MDNS.close();
-		ESP.restart();
 	}
+}
+void MasterServer::closeOtherMasters(std::vector<String> masterIPs) {
+	DynamicJsonBuffer jsonBuffer;
+	JsonObject& json = jsonBuffer.createObject();
+
+	json["ip"] = WiFi.localIP().toString();
+
+	String result;
+	json.printTo(result);
+
+	//Notifies all other masters that this device will be the only master
+	for (std::vector<String>::iterator it = masterIPs.begin(); it != masterIPs.end(); ++it) {
+		Serial.println("Letting know I'm the only master: " + *it);
+
+		HTTPClient http;
+		//Increase the timeout from 5000 to allow other clients to go through the electNewMaster steps
+		http.setTimeout(7000);
+		http.begin("http://" + *it + ":" + MASTER_PORT + "/restart");
+		http.sendRequest("POST", result);
+		http.end();
+	}
+
+	MDNS.setHostname(MASTER_INFO.hostname);
+	MDNS.notifyAPChange();
+	MDNS.update();
 }
 
 //REST request routing
@@ -201,7 +240,8 @@ String MasterServer::getDeviceIPFromIdOrName(String idOrName) {
 	return "";
 }
 void MasterServer::reDirect() {
-	String payload = server.arg("plain");
+	String payload = "";
+	if (!server.hasArg("plain")) payload = server.arg("plain");
 
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject& json = jsonBuffer.parseObject(payload);
@@ -293,6 +333,7 @@ const char* MasterServer::getMethod() {
 bool MasterServer::isForMe() {
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+
 	if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return false; }
 	if (!json.containsKey("id") && !json.containsKey("name")) { server.send(HTTP_CODE_BAD_REQUEST); return false; }
 
@@ -310,13 +351,12 @@ bool MasterServer::isForMe() {
 	else return false;
 }
 bool MasterServer::validId() {
-	bool isValid = true;
-	if (!server.hasArg("plain")) isValid = false;
-	else {
-		DynamicJsonBuffer jsonBuffer;
-		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
-		if (!json.success()) isValid = false;
-		else if (!json.containsKey("id") && !json.containsKey("name")) isValid = false;
-	}
-	return isValid;
+	if (!server.hasArg("plain")) return false;
+
+	DynamicJsonBuffer jsonBuffer;
+	JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+
+	if (!json.success()) return false;
+	else if (!json.containsKey("id") && !json.containsKey("name")) return false;
+	else return true;
 }

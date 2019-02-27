@@ -2,11 +2,9 @@
 
 FrameworkServer::~FrameworkServer() { stop(); }
 
-void FrameworkServer::stop()
-{
+void FrameworkServer::stop() {
 	Serial.println("Entering stop");
 
-	//server.client().stop();
 	server.close();
 	server.stop();
 }
@@ -18,10 +16,6 @@ char* FrameworkServer::getDeviceHostName() {
 	strcat(newName, hostName);
 
 	return newName;
-
-	//String strHostname = "ESP_" + (String)ESP.getChipId();
-	//char* hostname = const_cast<char*>(strHostname.c_str());
-	//return hostname;
 }
 
 void FrameworkServer::enableOTAUpdates() {
@@ -30,6 +24,7 @@ void FrameworkServer::enableOTAUpdates() {
 	ArduinoOTA.setHostname(getDeviceHostName());
 
 	ArduinoOTA.onStart([]() {
+		MDNS.close(); //Close to not interrupt other devices
 		Serial.println("OTA Update Started...");
 	});
 	ArduinoOTA.onEnd([]() {
@@ -42,8 +37,7 @@ void FrameworkServer::enableOTAUpdates() {
 	ArduinoOTA.begin();
 }
 
-void FrameworkServer::addUnknownEndpoint()
-{
+void FrameworkServer::addUnknownEndpoint() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleClientUnknown");
 
