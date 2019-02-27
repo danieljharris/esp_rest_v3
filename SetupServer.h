@@ -19,8 +19,12 @@ private:
 	std::function<void()> handleSetupConfig();
 	std::function<void()> handleSetupConnect();
 
+	void startMDNS();
+	void checkForMaster();
+
 public:
 	bool start();
+	void update();
 };
 
 #endif

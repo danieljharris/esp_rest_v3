@@ -161,7 +161,7 @@ std::function<void()> ClientServer::handleClientSetWiFiCreds() {
 		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
 
 		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return; }
-		if (!json.containsKey("ssid") && !json.containsKey("ssid")) {
+		if (!json.containsKey("ssid") && !json.containsKey("password")) {
 			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"ssid_and_password_fields_missing\"}");
 			return;
 		}

@@ -15,8 +15,9 @@ bool MasterServer::start() {
 	pinMode(GPIO_PIN, OUTPUT);
 	digitalWrite(GPIO_PIN, HIGH);
 
+	//Starts access point for new devices to connect to
 	Serial.println("Opening soft access point...");
-	WiFi.softAP(MASTER_INFO.ssid, MASTER_INFO.password); //Starts access point for new devices to connect to
+	WiFi.softAP(MASTER_INFO.ssid, MASTER_INFO.password);
 
 	Serial.println("Adding endpoints...");
 	addEndpoints();
