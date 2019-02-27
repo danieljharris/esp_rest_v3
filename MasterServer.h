@@ -10,27 +10,32 @@
 #endif
 
 #include "ClientServer.h"
+
 #include <ESP8266HTTPClient.h>
 #include <unordered_set>
 #include <PolledTimeout.h>
 
 using esp8266::polledTimeout::oneShot;
-
 typedef struct Device {
+private:
+	int timeoutSeconds = 12;
+public:
 	String id = "Unknown";
 	String ip = "Unknown";
 	String name = "Unknown";
 
+	//Used to expire devices when they don't checkin
+	//Each device must checkin once ever 12 seconds
 	oneShot *timeout = new oneShot(0);
 
 	Device() {
-		*timeout = oneShot(1000 * 12); //1000 = 1 second
+		*timeout = oneShot(1000 * timeoutSeconds);
 	};
 	Device(String id, String ip, String name) {
 		this->id = id;
 		this->ip = ip;
 		this->name = name;
-		*timeout = oneShot(1000 * 12); //1000 = 1 second
+		*timeout = oneShot(1000 * timeoutSeconds);
 	}
 
 	//Used by unordered_set (clientLookup) to compare devices
@@ -58,16 +63,17 @@ private:
 	std::function<void()> handleMasterGetDevices();
 	std::function<void()> handleMasterCheckin();
 
-	//Client endpoints
+	//Master endpoints
 	std::vector<Endpoint> masterEndpoints{
-	Endpoint("/wifi_info", HTTP_GET, handleMasterGetWiFiInfo()),
-	Endpoint("/devices", HTTP_GET, handleMasterGetDevices()),
-	Endpoint("/checkin", HTTP_POST, handleMasterCheckin()),
+		Endpoint("/wifi_info", HTTP_GET, handleMasterGetWiFiInfo()),
+		Endpoint("/devices", HTTP_GET, handleMasterGetDevices()),
+		Endpoint("/checkin", HTTP_POST, handleMasterCheckin())
 	};
 
 	//Master creation
 	void startMDNS();
-	bool anotherMasterExists();
+	void checkForOtherMasters();
+	void closeOtherMasters(std::vector<String> clientIPs);
 
 	//REST request routing
 	std::unordered_set<Device> clientLookup;

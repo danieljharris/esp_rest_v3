@@ -4,7 +4,6 @@
 #include "MasterServer.h"
 
 #include <ArduinoOTA.h>
-#include <ESP8266mDNS.h>
 #include <PolledTimeout.h>
 
 /*

@@ -75,8 +75,6 @@ std::function<void()> SetupServer::handleSetupConnect() {
 			WiFi.softAPdisconnect(true);
 			WiFi.disconnect(true);
 
-			//delay(1000);
-
 			creds.save(strSsid, strPassword, strName);
 			ESP.restart();
 		}

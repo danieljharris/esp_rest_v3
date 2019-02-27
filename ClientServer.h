@@ -9,8 +9,8 @@
 	#include "WProgram.h"
 #endif
 
-#include "Config.h"
 #include "FrameworkServer.h"
+
 #include <ESP8266mDNS.h>
 #include <ArduinoJson.h>
 

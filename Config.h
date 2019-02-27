@@ -6,6 +6,8 @@
 
 const WiFiInfo MASTER_INFO("Universal-Framework", "7kAtZZm9ak", "UniFrame");
 
+const String SETUP_PASSWORD = "zJ2f5xSX";
+
 const String MASTER_MDNS_ID = "UniFrameMaster";
 const String CLIENT_MDNS_ID = "UniFrameClients";
 
