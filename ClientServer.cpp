@@ -73,7 +73,11 @@ std::function<void()> ClientServer::handleClientSetDevice() {
 			power_toggle();
 		}
 		else if (json["action"] == "pulse") {
-			if (json["direction"] == "off_on_off") {
+			if (!json.containsKey("direction")) {
+				server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"direction_field_missing\"}");
+				return;
+			}
+			else if (json["direction"] == "off_on_off") {
 				power_on();
 				delay(1000);
 				power_off();
@@ -84,19 +88,27 @@ std::function<void()> ClientServer::handleClientSetDevice() {
 				power_on();
 			}
 			else {
-				server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"direction_field_missing_or_invalid\"}");
+				server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"direction_field_invalid\"}");
 				return;
 			}
 		}
 		else if (json["action"] == "set") {
-			if (json["power"] == true) {
+			if (!json.containsKey("power")) {
+				server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"power_field_missing\"}");
+				return;
+			}
+			else if (!json["power"].is<bool>()) {
+				server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"power_field_invalid\"}");
+				return;
+			}
+			else if (json["power"] == true) {
 				power_on();
 			}
 			else if (json["power"] == false) {
 				power_off();
 			}
 			else {
-				server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"power_field_missing_or_invalid\"}");
+				server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"power_field_invalid\"}");
 				return;
 			}
 		}
@@ -205,14 +217,24 @@ std::function<void()> ClientServer::handleClientRestart()
 			DynamicJsonBuffer jsonBuffer;
 			JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
 
-			if (json.success() && json.containsKey("delay_seconds")) {
+			if (json.success() && json.containsKey("delay_seconds") && json["delay_seconds"].is<int>()) {
 				delaySeconds = json["delay_seconds"].as<int>();
+				if (delaySeconds < 1) delaySeconds = 1; //Min of 1 second
 				if (delaySeconds > 10) delaySeconds = 10; //Max of 10 seconds
 			}
 		}
 
-		//Default sleep partly in place to allow server to return here
-		server.send(HTTP_CODE_OK);
+		//Creates the return json object
+		DynamicJsonBuffer jsonBuffer2;
+		JsonObject& output = jsonBuffer2.createObject();
+
+		output["delay_seconds"] = delaySeconds;
+
+		String outputStr;
+		output.printTo(outputStr);
+
+		//Default sleep used allow server to return this send line:
+		server.send(HTTP_CODE_OK, "application/json", outputStr);
 
 		Serial.print("Sleeping for seconds: ");
 		Serial.println(delaySeconds);
