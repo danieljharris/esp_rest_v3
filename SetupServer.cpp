@@ -11,6 +11,8 @@ bool SetupServer::start() {
 	server.begin(80);
 }
 
+void SetupServer::update() { checkForMaster(); }
+
 void SetupServer::addEndpoints() {
 	std::function<void()> setupConfig = handleSetupConfig();
 	std::function<void()> setupConnect = handleSetupConnect();
@@ -18,7 +20,6 @@ void SetupServer::addEndpoints() {
 	server.on("/", HTTP_GET, setupConfig);
 	server.on("/connect", HTTP_ANY, setupConnect);
 }
-
 std::function<void()> SetupServer::handleSetupConfig() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleSetupConfig");
@@ -87,4 +88,20 @@ std::function<void()> SetupServer::handleSetupConnect() {
 		}
 	};
 	return lambda;
+}
+
+
+void SetupServer::checkForMaster() {
+	Serial.println("Checking for master...");
+
+	String lookingFor = MASTER_INFO.ssid;
+	int foundNetworks = WiFi.scanNetworks();
+	for (int i = 0; i < foundNetworks; i++) {
+		String current_ssid = WiFi.SSID(i);
+
+		if (current_ssid.equals(lookingFor)) {
+			Serial.println("Master found! Restarting...");
+			ESP.restart();
+		}
+	}
 }

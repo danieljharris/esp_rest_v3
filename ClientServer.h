@@ -11,7 +11,6 @@
 
 #include "FrameworkServer.h"
 
-#include <ESP8266mDNS.h>
 #include <ArduinoJson.h>
 
 typedef struct Endpoint {
@@ -43,7 +42,7 @@ private:
 	bool findMaster();
 	bool getAndSaveMainWiFiInfo();
 
-	//Client to master handleing
+	//Client to master transition handleing
 	String masterIP = "";
 	void checkinWithMaster();
 	bool updateMasterIP();

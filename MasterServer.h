@@ -61,13 +61,13 @@ private:
 	void addUnknownEndpoint();
 	std::function<void()> handleMasterGetWiFiInfo();
 	std::function<void()> handleMasterGetDevices();
-	std::function<void()> handleMasterCheckin();
+	std::function<void()> handleMasterSetCheckin();
 
 	//Master endpoints
 	std::vector<Endpoint> masterEndpoints{
 		Endpoint("/wifi_info", HTTP_GET, handleMasterGetWiFiInfo()),
 		Endpoint("/devices", HTTP_GET, handleMasterGetDevices()),
-		Endpoint("/checkin", HTTP_POST, handleMasterCheckin())
+		Endpoint("/checkin", HTTP_POST, handleMasterSetCheckin())
 	};
 
 	//Master creation

@@ -15,8 +15,9 @@ bool MasterServer::start() {
 	pinMode(GPIO_PIN, OUTPUT);
 	digitalWrite(GPIO_PIN, HIGH);
 
+	//Starts access point for new devices to connect to
 	Serial.println("Opening soft access point...");
-	WiFi.softAP(MASTER_INFO.ssid, MASTER_INFO.password); //Starts access point for new devices to connect to
+	WiFi.softAP(MASTER_INFO.ssid, MASTER_INFO.password);
 
 	Serial.println("Adding endpoints...");
 	addEndpoints();
@@ -117,7 +118,7 @@ std::function<void()> MasterServer::handleMasterGetDevices() {
 
 	return lambda;
 }
-std::function<void()> MasterServer::handleMasterCheckin() {
+std::function<void()> MasterServer::handleMasterSetCheckin() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleMasterCheckin");
 
@@ -127,10 +128,16 @@ std::function<void()> MasterServer::handleMasterCheckin() {
 		DynamicJsonBuffer jsonBuffer;
 		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
 
-		if (!json.success() || !json.containsKey("id") || !json.containsKey("name")) {
-			server.send(HTTP_CODE_BAD_REQUEST);
+		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+		else if (!json.containsKey("id")) {
+			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"id_field_missing\"}");
 			return;
 		}
+		else if (!json.containsKey("name")) {
+			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"name_field_missing\"}");
+			return;
+		}
+
 		server.send(HTTP_CODE_OK);
 
 		Device device = Device();
