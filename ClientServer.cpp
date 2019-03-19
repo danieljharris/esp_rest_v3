@@ -52,9 +52,9 @@ std::function<void()> ClientServer::handleClientGetInfo() {
 	};
 	return lambda;
 }
-std::function<void()> ClientServer::handleClientSetDevice() {
+std::function<void()> ClientServer::handleClientPostDevice() {
 	std::function<void()> lambda = [=]() {
-		Serial.println("Entering handleClientSetDevice");
+		Serial.println("Entering handleClientPostDevice");
 
 		if (!server.hasArg("plain")) { server.send(HTTP_CODE_BAD_REQUEST); return; }
 
@@ -131,9 +131,9 @@ std::function<void()> ClientServer::handleClientSetDevice() {
 	};
 	return lambda;
 }
-std::function<void()> ClientServer::handleClientSetName() {
+std::function<void()> ClientServer::handleClientPostName() {
 	std::function<void()> lambda = [=]() {
-		Serial.println("Entering handleClientSetName");
+		Serial.println("Entering handleClientPostName");
 
 		if (!server.hasArg("plain")) { server.send(HTTP_CODE_BAD_REQUEST); return; }
 
@@ -163,9 +163,9 @@ std::function<void()> ClientServer::handleClientSetName() {
 	};
 	return lambda;
 }
-std::function<void()> ClientServer::handleClientSetWiFiCreds() {
+std::function<void()> ClientServer::handleClientPostWiFiCreds() {
 	std::function<void()> lambda = [=]() {
-		Serial.println("Entering handleClientSetWiFiCreds");
+		Serial.println("Entering handleClientPostWiFiCreds");
 
 		if (!server.hasArg("plain")) { server.send(HTTP_CODE_BAD_REQUEST); return;}
 
@@ -202,10 +202,9 @@ std::function<void()> ClientServer::handleClientSetWiFiCreds() {
 	};
 	return lambda;
 }
-std::function<void()> ClientServer::handleClientRestart()
-{
+std::function<void()> ClientServer::handleClientPostRestart() {
 	std::function<void()> lambda = [=]() {
-		Serial.println("Entering handleClientRestart");
+		Serial.println("Entering handleClientPostRestart");
 
 		//mDNS should not run during sleep
 		MDNS.close();
@@ -245,10 +244,9 @@ std::function<void()> ClientServer::handleClientRestart()
 	};
 	return lambda;
 }
-std::function<void()> ClientServer::handleClientNewMaster()
-{
+std::function<void()> ClientServer::handleClientPostNewMaster() {
 	std::function<void()> lambda = [=]() {
-		Serial.println("Entering handleClientNewMaster");
+		Serial.println("Entering handleClientPostNewMaster");
 
 		if (!server.hasArg("plain")) { server.send(HTTP_CODE_BAD_REQUEST); return; }
 
@@ -257,7 +255,7 @@ std::function<void()> ClientServer::handleClientNewMaster()
 
 		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return; }
 		if (!json.containsKey("ip")) {
-			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"ip_fields_missing\"}");
+			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"ip_field_missing\"}");
 			return;
 		}
 		server.send(HTTP_CODE_OK);
@@ -510,4 +508,43 @@ void ClientServer::power_off() {
 
 	gpioPinState = false;
 	digitalWrite(GPIO_PIN, HIGH);
+}
+
+
+//Light switch example
+std::function<void()> ClientServer::handleClientPostLightSwitch() {
+	std::function<void()> lambda = [=]() {
+		Serial.println("Entering handleClientPostLightSwitch");
+
+		if (!server.hasArg("plain")) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+
+		DynamicJsonBuffer jsonBuffer;
+		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+
+		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+		if (!json.containsKey("power")) {
+			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"power_field_missing\"}");
+			return;
+		}
+		server.send(HTTP_CODE_OK);
+
+		String ip = masterIP + ":" + MASTER_PORT;
+		String url = "http://" + ip + "/device";
+
+		DynamicJsonBuffer jsonBuffer2;
+		JsonObject& toClient = jsonBuffer2.createObject();
+
+		toClient["name"] = "LightBulb";
+		toClient["action"] = "set";
+		toClient["power"] = json["power"];
+
+		String body;
+		toClient.printTo(body);
+
+		HTTPClient http;
+		http.begin(url);
+		http.POST(body);
+		http.end();
+	};
+	return lambda;
 }

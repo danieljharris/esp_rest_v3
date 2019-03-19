@@ -30,11 +30,11 @@ private:
 	//Client endpoint handleing
 	void addEndpoints();
 	std::function<void()> handleClientGetInfo();
-	std::function<void()> handleClientSetDevice();
-	std::function<void()> handleClientSetName();
-	std::function<void()> handleClientSetWiFiCreds();
-	std::function<void()> handleClientRestart();
-	std::function<void()> handleClientNewMaster();
+	std::function<void()> handleClientPostDevice();
+	std::function<void()> handleClientPostName();
+	std::function<void()> handleClientPostWiFiCreds();
+	std::function<void()> handleClientPostRestart();
+	std::function<void()> handleClientPostNewMaster();
 
 	//Client creation
 	void startMDNS();
@@ -55,15 +55,21 @@ private:
 	void power_off();
 	bool gpioPinState = false;
 
+	//Light switch example
+	std::function<void()> handleClientPostLightSwitch();
+
 protected:
 	//Client endpoints
 	std::vector<Endpoint> clientEndpoints{
 		Endpoint("/device", HTTP_GET, handleClientGetInfo()),
-		Endpoint("/device", HTTP_POST, handleClientSetDevice()),
-		Endpoint("/name", HTTP_POST, handleClientSetName()),
-		Endpoint("/credentials", HTTP_POST, handleClientSetWiFiCreds()),
-		Endpoint("/restart", HTTP_POST, handleClientRestart()),
-		Endpoint("/master", HTTP_POST, handleClientNewMaster())
+		Endpoint("/device", HTTP_POST, handleClientPostDevice()),
+		Endpoint("/name", HTTP_POST, handleClientPostName()),
+		Endpoint("/credentials", HTTP_POST, handleClientPostWiFiCreds()),
+		Endpoint("/restart", HTTP_POST, handleClientPostRestart()),
+		Endpoint("/master", HTTP_POST, handleClientPostNewMaster()),
+
+		//Light switch example
+		Endpoint("/light/switch", HTTP_POST, handleClientPostLightSwitch()),
 	};
 
 	//General reusable functions for client & master servers
