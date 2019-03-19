@@ -54,7 +54,8 @@ void MasterServer::addUnknownEndpoint() {
 		Serial.println("Entering handleMasterUnknown / masterToClientEndpoint");
 
 		//If the request has no name/id or its name/id matches mine
-		if (!validId() || isForMe()) {
+		if (!validIdOrName() || isForMe()) {
+
 			//Call my client endpoint if it exists
 			for (std::vector<Endpoint>::iterator it = clientEndpoints.begin(); it != clientEndpoints.end(); ++it) {
 				if (server.uri().equals(it->path) && server.method() == it->method) {
@@ -118,9 +119,9 @@ std::function<void()> MasterServer::handleMasterGetDevices() {
 
 	return lambda;
 }
-std::function<void()> MasterServer::handleMasterSetCheckin() {
+std::function<void()> MasterServer::handleMasterPostCheckin() {
 	std::function<void()> lambda = [=]() {
-		Serial.println("Entering handleMasterCheckin");
+		Serial.println("Entering handleMasterPostCheckin");
 
 		//Gets the IP from the client calling
 		String ip = server.client().remoteIP().toString();
@@ -248,7 +249,7 @@ String MasterServer::getDeviceIPFromIdOrName(String idOrName) {
 }
 void MasterServer::reDirect() {
 	String payload = "";
-	if (!server.hasArg("plain")) payload = server.arg("plain");
+	if (server.hasArg("plain")) payload = server.arg("plain");
 
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject& json = jsonBuffer.parseObject(payload);
@@ -256,6 +257,10 @@ void MasterServer::reDirect() {
 	String idOrName = "";
 	if (json.containsKey("id")) idOrName = json["id"].asString();
 	else if (json.containsKey("name")) idOrName = json["name"].asString();
+	else {
+		server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"name_or_id_not_found\"}");
+		return;
+	}
 
 	String ip = getDeviceIPFromIdOrName(idOrName);
 	if (ip == "") {
@@ -357,7 +362,7 @@ bool MasterServer::isForMe() {
 	}
 	else return false;
 }
-bool MasterServer::validId() {
+bool MasterServer::validIdOrName() {
 	if (!server.hasArg("plain")) return false;
 
 	DynamicJsonBuffer jsonBuffer;
@@ -366,4 +371,49 @@ bool MasterServer::validId() {
 	if (!json.success()) return false;
 	else if (!json.containsKey("id") && !json.containsKey("name")) return false;
 	else return true;
+}
+
+
+//Light switch example
+std::function<void()> MasterServer::handleMasterPostLightSwitch() {
+	std::function<void()> lambda = [=]() {
+		Serial.println("Entering handleMasterPostLightSwitch");
+
+		if (!server.hasArg("plain")) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+
+		DynamicJsonBuffer jsonBuffer;
+		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+
+		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+		if (!json.containsKey("power")) {
+			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"power_field_missing\"}");
+			return;
+		}
+		server.send(HTTP_CODE_OK);
+
+		for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
+			Device device = *it;
+			if (device.name.equals("LightBulb")) {
+
+				String clientIp = device.ip + ":" + CLIENT_PORT;
+				String clientUrl = "http://" + clientIp + "/device";
+
+				//Creates the return json object
+				DynamicJsonBuffer jsonBuffer2;
+				JsonObject& toClient = jsonBuffer2.createObject();
+
+				toClient["action"] = "set";
+				toClient["power"] = json["power"];
+
+				String outputStr;
+				toClient.printTo(outputStr);
+
+				HTTPClient http;
+				http.begin(clientUrl);
+				http.POST(outputStr);
+				http.end();
+			}
+		}
+	};
+	return lambda;
 }

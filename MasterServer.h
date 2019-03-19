@@ -61,13 +61,16 @@ private:
 	void addUnknownEndpoint();
 	std::function<void()> handleMasterGetWiFiInfo();
 	std::function<void()> handleMasterGetDevices();
-	std::function<void()> handleMasterSetCheckin();
+	std::function<void()> handleMasterPostCheckin();
 
 	//Master endpoints
 	std::vector<Endpoint> masterEndpoints{
 		Endpoint("/wifi_info", HTTP_GET, handleMasterGetWiFiInfo()),
 		Endpoint("/devices", HTTP_GET, handleMasterGetDevices()),
-		Endpoint("/checkin", HTTP_POST, handleMasterSetCheckin())
+		Endpoint("/checkin", HTTP_POST, handleMasterPostCheckin()),
+
+		//Light switch example
+		Endpoint("/light/switch", HTTP_POST, handleMasterPostLightSwitch())
 	};
 
 	//Master creation
@@ -85,7 +88,10 @@ private:
 	//Helper functions for REST routing
 	const char* getMethod();
 	bool isForMe();
-	bool validId();
+	bool validIdOrName();
+
+	//Light switch example
+	std::function<void()> handleMasterPostLightSwitch();
 
 public:
 	bool start();
