@@ -19,7 +19,7 @@ bool ClientServer::start() {
 	checkinWithMaster();
 
 	Serial.println("Adding endpoints...");
-	addEndpoints();
+	addEndpoints(clientEndpoints);
 
 	Serial.println("Adding unknown endpoint...");
 	addUnknownEndpoint();
@@ -40,11 +40,6 @@ bool ClientServer::start() {
 void ClientServer::update() { checkinWithMaster(); }
 
 //Client endpoints
-void ClientServer::addEndpoints() {
-	for (std::vector<Endpoint>::iterator it = clientEndpoints.begin(); it != clientEndpoints.end(); ++it) {
-		server.on(it->path, it->method, it->function);
-	}
-}
 std::function<void()> ClientServer::handleClientGetInfo() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleClientGetInfo");

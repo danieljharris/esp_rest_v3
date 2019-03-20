@@ -6,20 +6,13 @@ bool SetupServer::start() {
 	WiFi.mode(WIFI_AP);
 	WiFi.softAP(SETUP_SSID, SETUP_PASSWORD);
 
-	addEndpoints();
+	addEndpoints(setupEndpoints);
 	addUnknownEndpoint();
 	server.begin(80);
 }
 
 void SetupServer::update() { checkForMaster(); }
 
-void SetupServer::addEndpoints() {
-	std::function<void()> setupConfig = handleSetupConfig();
-	std::function<void()> setupConnect = handleSetupConnect();
-
-	server.on("/", HTTP_GET, setupConfig);
-	server.on("/connect", HTTP_ANY, setupConnect);
-}
 std::function<void()> SetupServer::handleSetupConfig() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleSetupConfig");
@@ -89,7 +82,6 @@ std::function<void()> SetupServer::handleSetupConnect() {
 	};
 	return lambda;
 }
-
 
 void SetupServer::checkForMaster() {
 	Serial.println("Checking for master...");

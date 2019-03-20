@@ -52,3 +52,9 @@ void FrameworkServer::addUnknownEndpoint() {
 	};
 	server.onNotFound(lambda);
 }
+
+void FrameworkServer::addEndpoints(std::vector<Endpoint> endpoints) {
+	for (std::vector<Endpoint>::iterator it = endpoints.begin(); it != endpoints.end(); ++it) {
+		server.on(it->path, it->method, it->function);
+	}
+}
