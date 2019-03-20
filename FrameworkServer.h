@@ -11,6 +11,7 @@
 
 #include "WiFiCredentials.h"
 #include "Config.h"
+#include "Endpoint.h"
 
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPClient.h>
@@ -25,7 +26,7 @@ protected:
 	char* getDeviceHostName();
 	void enableOTAUpdates();
 	void addUnknownEndpoint();
-	virtual void addEndpoints() {};
+	void addEndpoints(std::vector<Endpoint> endpoints);
 
 public:
 	virtual bool start() {};

@@ -15,11 +15,16 @@ class SetupServer : public FrameworkServer {
 private:
 	const char* SETUP_SSID = getDeviceHostName();
 
-	void addEndpoints();
+	//Setup endpoint handleing
 	std::function<void()> handleSetupConfig();
 	std::function<void()> handleSetupConnect();
 
-	void startMDNS();
+	//Setup endpoints
+	std::vector<Endpoint> setupEndpoints{
+		Endpoint("/", HTTP_GET, handleSetupConfig()),
+		Endpoint("/connect", HTTP_ANY, handleSetupConnect())
+	};
+
 	void checkForMaster();
 
 public:

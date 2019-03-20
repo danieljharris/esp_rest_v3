@@ -13,22 +13,9 @@
 
 #include <ArduinoJson.h>
 
-typedef struct Endpoint {
-	String path;
-	HTTPMethod method;
-	std::function<void()> function;
-
-	Endpoint(String path, HTTPMethod method, std::function<void()> function) {
-		this->path = path;
-		this->method = method;
-		this->function = function;
-	}
-};
-
 class ClientServer : public FrameworkServer {
 private:
 	//Client endpoint handleing
-	void addEndpoints();
 	std::function<void()> handleClientGetInfo();
 	std::function<void()> handleClientPostDevice();
 	std::function<void()> handleClientPostName();

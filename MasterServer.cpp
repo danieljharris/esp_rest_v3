@@ -20,7 +20,7 @@ bool MasterServer::start() {
 	WiFi.softAP(MASTER_INFO.ssid, MASTER_INFO.password);
 
 	Serial.println("Adding endpoints...");
-	addEndpoints();
+	addEndpoints(masterEndpoints);
 
 	Serial.println("Adding unknown endpoint...");
 	addUnknownEndpoint();
@@ -44,11 +44,6 @@ void MasterServer::update() {
 }
 
 //Master endpoints
-void MasterServer::addEndpoints() {
-	for (std::vector<Endpoint>::iterator it = masterEndpoints.begin(); it != masterEndpoints.end(); ++it) {
-		server.on(it->path, it->method, it->function);
-	}
-}
 void MasterServer::addUnknownEndpoint() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleMasterUnknown / masterToClientEndpoint");
