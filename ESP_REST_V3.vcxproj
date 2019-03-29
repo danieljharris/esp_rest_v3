@@ -86,10 +86,13 @@
   <ItemGroup>
     <ClInclude Include="ClientServer.h" />
     <ClInclude Include="Config.h" />
+    <ClInclude Include="Device.h" />
+    <ClInclude Include="Endpoint.h" />
     <ClInclude Include="FrameworkServer.h" />
     <ClInclude Include="MasterServer.h" />
     <ClInclude Include="SetupServer.h" />
     <ClInclude Include="WiFiCredentials.h" />
+    <ClInclude Include="WiFiInfo.h" />
     <ClInclude Include="__vm\.ESP_REST_V3.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>

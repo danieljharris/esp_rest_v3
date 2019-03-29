@@ -1,3 +1,5 @@
+//ClientServer.cpp
+
 #include "ClientServer.h"
 
 bool ClientServer::start() {
@@ -214,7 +216,7 @@ std::function<void()> ClientServer::handleClientPostRestart() {
 			if (json.success() && json.containsKey("delay_seconds") && json["delay_seconds"].is<int>()) {
 				delaySeconds = json["delay_seconds"].as<int>();
 				if (delaySeconds < 1) delaySeconds = 1; //Min of 1 second
-				if (delaySeconds > 10) delaySeconds = 10; //Max of 10 seconds
+				if (delaySeconds > 30) delaySeconds = 30; //Max of 30 seconds
 			}
 		}
 
@@ -399,7 +401,7 @@ void ClientServer::electNewMaster() {
 		if (json.success() && json.containsKey("id")) {
 			String currentId = json["id"].asString();
 
-			if (currentId > chosenId) {
+			if (currentId < chosenId) {
 				chosenId = currentId;
 			}
 		}
