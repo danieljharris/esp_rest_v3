@@ -1,3 +1,5 @@
+//SetupServer.cpp
+
 #include "SetupServer.h"
 
 bool SetupServer::start() {
@@ -22,14 +24,14 @@ std::function<void()> SetupServer::handleSetupConfig() {
 		String password = info.password;
 		String name = info.hostname;
 
-		String options;
+		String options = "";
 		int networksFound = WiFi.scanNetworks();
 		for (int i = 0; i < WiFi.scanNetworks(); i++) {
 			String ssid = WiFi.SSID(i).c_str();
 			options += "<option value = '" + ssid + "'>" + ssid + "</option>";
 		}
 
-		String content;
+		String content = "";
 		content += "<html><body>";
 
 		content += "<form action='/connect' method='POST'>Log in to Voice Controler:<br>";
@@ -48,7 +50,7 @@ std::function<void()> SetupServer::handleSetupConfig() {
 std::function<void()> SetupServer::handleSetupConnect() {
 	std::function<void()> lambda = [=]() {
 		Serial.println("Entering handleSetupConnect");
-		String content;
+		String content = "";
 
 		if (server.hasArg("SSID") && server.hasArg("PASSWORD") && server.hasArg("NAME")) {
 			String strSsid = server.arg("SSID");

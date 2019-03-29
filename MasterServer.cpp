@@ -1,3 +1,5 @@
+//MasterServer.app
+
 #include "MasterServer.h"
 
 bool MasterServer::start() {
@@ -194,7 +196,7 @@ void MasterServer::checkForOtherMasters() {
 		if (json.success() && json.containsKey("id")) {
 			String currentId = json["id"].asString();
 
-			if (currentId > chosenId) {
+			if (currentId < chosenId) {
 				chosenId = currentId;
 			}
 		}
