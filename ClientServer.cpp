@@ -14,8 +14,11 @@ bool ClientServer::start() {
 	else Serial.println("I am a client!");
 
 	//Sets the ESP's output pin to OFF
-	pinMode(GPIO_PIN, OUTPUT);
-	digitalWrite(GPIO_PIN, HIGH);
+	pinMode(GPIO_OUTPUT_PIN, OUTPUT);
+	//digitalWrite(GPIO_OUTPUT_PIN, HIGH);
+
+	//Sets the ESP's input pin
+	pinMode(GPIO_INPUT_PIN, INPUT_PULLUP);
 
 	Serial.println("Letting master know I exist...");
 	checkinWithMaster();
@@ -35,11 +38,14 @@ bool ClientServer::start() {
 	Serial.println("Enableing OTA updates...");
 	enableOTAUpdates();
 
+	Serial.println("Enableing relay pins...");
+	relayMode(OUTPUT);
+
 	Serial.println("Ready!");
 	return true;
 }
 
-void ClientServer::update() { checkinWithMaster(); }
+void ClientServer::update() { checkinWithMaster();}
 
 //Client endpoints
 std::function<void()> ClientServer::handleClientGetInfo() {
@@ -106,6 +112,38 @@ std::function<void()> ClientServer::handleClientPostDevice() {
 			}
 			else {
 				server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"power_field_invalid\"}");
+				return;
+			}
+		}
+		else if (json["action"] == "relay_toggle") {
+			if (!json.containsKey("relay_pin")) {
+				server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"relay_pin_field_missing\"}");
+				return;
+			}
+			else if (json["relay_pin"] > 0 && json["relay_pin"] <= 8) {
+				int relay_pin = json["relay_pin"];
+				relayToggle(relay_pin);
+			}
+			else {
+				server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"relay_pin_field_invalid\"}");
+				return;
+			}
+		}
+		else if (json["action"] == "relay_toggle_set") {
+			if (!json.containsKey("relay_pins")) {
+				server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"relay_pins_field_missing\"}");
+				return;
+			}
+			else if (json["relay_pins"].is<JsonArray>()) {
+				JsonArray& pins = json["relay_pins"].asArray();
+				int length = pins.size();
+				for (int i = 0; i < length; i++) {
+					int relay_pin = pins[i];
+					relayToggle(relay_pin);
+				}
+			}
+			else {
+				server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"relay_pins_field_invalid\"}");
 				return;
 			}
 		}
@@ -498,13 +536,13 @@ void ClientServer::power_on() {
 	Serial.println("Entering power_on");
 
 	gpioPinState = true;
-	digitalWrite(GPIO_PIN, LOW);
+	digitalWrite(GPIO_OUTPUT_PIN, LOW);
 }
 void ClientServer::power_off() {
 	Serial.println("Entering power_off");
 
 	gpioPinState = false;
-	digitalWrite(GPIO_PIN, HIGH);
+	digitalWrite(GPIO_OUTPUT_PIN, HIGH);
 }
 
 
@@ -544,4 +582,47 @@ std::function<void()> ClientServer::handleClientPostLightSwitch() {
 		http.end();
 	};
 	return lambda;
+}
+
+//Poster demo
+void ClientServer::handle() {
+	server.handleClient();
+	//checkInputChange();
+};
+void ClientServer::checkInputChange() {
+	bool currentInputValue = (LOW == digitalRead(GPIO_INPUT_PIN));
+	if (lastInputValue != currentInputValue) {
+		Serial.println("Input changed!");
+		lastInputValue = currentInputValue;
+
+		String ip = masterIP + ":" + MASTER_PORT;
+		String url = "http://" + ip + "/device";
+
+		DynamicJsonBuffer jsonBuffer;
+		JsonObject& toClient = jsonBuffer.createObject();
+
+		toClient["name"] = "LightBulb";
+		toClient["action"] = "set";
+		toClient["power"] = currentInputValue;
+
+		String body;
+		toClient.printTo(body);
+
+		HTTPClient http;
+		http.begin(url);
+		http.POST(body);
+		http.end();
+
+
+		//Also control speaker
+		toClient["name"] = "Speaker";
+
+		String body2;
+		toClient.printTo(body2);
+
+		HTTPClient http2;
+		http2.begin(url);
+		http2.POST(body2);
+		http2.end();
+	}
 }

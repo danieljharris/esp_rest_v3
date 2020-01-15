@@ -60,3 +60,32 @@ void FrameworkServer::addEndpoints(std::vector<Endpoint> endpoints) {
 		server.on(it->path, it->method, it->function);
 	}
 }
+
+void FrameworkServer::relayMode(uint8_t type)
+{
+	for (int i = 0; i < 8; i++) {
+		int pin = RELAYS[i];
+		pinMode(pin, type);
+		digitalWrite(pin, HIGH);
+	}
+}
+
+void FrameworkServer::relayWrite(uint8_t pin, bool state)
+{
+	int adjusted_pin = pin - 1;
+	int relay_pin = RELAYS[adjusted_pin];
+	digitalWrite(relay_pin, state);
+}
+
+void FrameworkServer::relayToggle(uint8_t pin)
+{
+	int adjusted_pin = pin - 1;
+
+	int relay_pin = RELAYS[adjusted_pin];
+	bool currentState = RELAYS_STATE[adjusted_pin];
+
+	bool toggledState = !currentState;
+	RELAYS_STATE[adjusted_pin] = toggledState;
+
+	digitalWrite(relay_pin, toggledState);
+}

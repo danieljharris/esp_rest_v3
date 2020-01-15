@@ -1,175 +1,189 @@
-C:\Users\Daniel's\ Gaming\ PC\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\ESP_REST_V3.cpp.o: \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\ESP_REST_V3.cpp \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/arduino.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/stdlib.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/machine/ieeefp.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/_ansi.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/newlib.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/sys/config.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/sys/features.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/xtensa/config/core-isa.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/sys/reent.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/_ansi.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/sys/_types.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/machine/_types.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/machine/_default_types.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/sys/lock.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/sys/cdefs.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/machine/stdlib.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/alloca.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/stdint.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/sys/_intsup.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/stdio.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/sys/types.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/machine/types.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/sys/stdio.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/sys/pgmspace.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/string.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/sys/string.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/math.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/stdlib_noniso.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/binary.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/esp8266_peri.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/c_types.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/twi.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/Arduino.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/core_esp8266_features.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/core_esp8266_version.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/core_version.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/pgmspace.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/ets_sys.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/c_types.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/eagle_soc.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/osapi.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/user_config.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/WCharacter.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/WString.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/HardwareSerial.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/inttypes.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/time.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/machine/time.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/Stream.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/Print.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/Printable.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/uart.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/Esp.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/Arduino.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/Updater.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/flash_utils.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/../../bootloaders/eboot/flash.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/spi_flash_geometry.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/MD5Builder.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/WString.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/Stream.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/md5.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/debug.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\variants\generic/pins_arduino.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\variants\generic/common.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\FrameworkServer.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\WiFiCredentials.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\WiFiInfo.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\Config.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\Endpoint.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WebServer\src/ESP8266WebServer.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/ESP8266WiFi.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/include/wl_definitions.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/IPAddress.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/Printable.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/init.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/opt.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwipopts.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/gluedebug.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/debug.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/arch.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/arch/cc.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip-err-t.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/mem.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/gluedebug.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/ipv4_addr.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/ip_addr.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/def.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/ip4_addr.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/ip6_addr.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/def.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/limits.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/arch/cc.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip-git-hash.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/sys/time.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/debug.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/ESP8266WiFiType.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/queue.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/ESP8266WiFiSTA.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/ESP8266WiFiGeneric.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/user_interface.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/os_type.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/ets_sys.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/ipv4_addr.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/queue.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/spi_flash.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/gpio.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/ESP8266WiFiAP.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/ESP8266WiFiScan.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/WiFiClient.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/Print.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/Client.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/IPAddress.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/include/slist.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/WiFiServer.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/Server.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/WiFiServerSecure.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/WiFiClientSecure.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/WiFiClientSecureBearSSL.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/bearssl/bearssl.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/bearssl/bearssl_hash.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/bearssl/bearssl_hmac.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/bearssl/bearssl_kdf.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/bearssl/bearssl_rand.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/bearssl/bearssl_block.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/bearssl/bearssl_prf.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/bearssl/bearssl_aead.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/bearssl/bearssl_rsa.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/bearssl/bearssl_ec.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/bearssl/bearssl_ssl.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/bearssl/bearssl_x509.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/include/bearssl/bearssl_pem.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/BearSSLHelpers.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/Updater.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/CertStoreBearSSL.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/BearSSLHelpers.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/WiFiServerSecureBearSSL.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/WiFiClientSecure.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WebServer\src/detail/RequestHandler.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266HTTPClient\src/ESP8266HTTPClient.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/WiFiClient.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266mDNS\src/ESP8266mDNS.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266mDNS\src/ESP8266mDNS_Legacy.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/WiFiUdp.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/Udp.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/include/slist.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266mDNS\src/LEAmDNS.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/udp.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/pbuf.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/err.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/netif.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/stats.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/mem.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/memp.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/priv/memp_std.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/priv/memp_priv.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/priv/mem_priv.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/ip.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/ip4.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/prot/ip4.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/ip6.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/prot/ip.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/lwip2/include/lwip/prot/udp.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/debug.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ESP8266WiFi\src/include/UdpContext.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0/tools/sdk/libc/xtensa-lx106-elf/include/assert.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\cores\esp8266/PolledTimeout.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.5.0\libraries\ArduinoOTA/ArduinoOTA.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\Setupserver.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\ClientServer.h \
+C:\Users\Daniel\ Harris\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\ESP_REST_V3.cpp.o: \
+ C:\Users\Daniel\ Harris\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\ESP_REST_V3.cpp \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/arduino.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/stdlib.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/machine/ieeefp.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/_ansi.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/newlib.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/sys/config.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/sys/features.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/xtensa/config/core-isa.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/sys/reent.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/_ansi.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/sys/_types.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/machine/_types.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/machine/_default_types.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/sys/lock.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/sys/cdefs.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/machine/stdlib.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/alloca.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/stdint.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/sys/_intsup.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/stdio.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/sys/types.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/machine/types.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/sys/stdio.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/sys/pgmspace.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/string.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/sys/string.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/math.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/stdlib_noniso.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/binary.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/esp8266_peri.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/c_types.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/esp8266_undocumented.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/twi.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/Arduino.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/core_esp8266_features.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/core_esp8266_version.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/core_version.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/pgmspace.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/ets_sys.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/c_types.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/eagle_soc.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/osapi.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/user_config.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/WCharacter.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/WString.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/HardwareSerial.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/inttypes.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/../include/time.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/../include/_ansi.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/machine/time.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/Stream.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/Print.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/Printable.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/uart.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/Esp.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/Arduino.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/Updater.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/flash_utils.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/../../bootloaders/eboot/flash.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/spi_flash_geometry.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/MD5Builder.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/WString.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/Stream.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/md5.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/debug.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\variants\generic/pins_arduino.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\variants\generic/common.h \
+ C:\Users\Daniel\ Harris\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\FrameworkServer.h \
+ C:\Users\Daniel\ Harris\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\WiFiCredentials.h \
+ C:\Users\Daniel\ Harris\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\WiFiInfo.h \
+ C:\Users\Daniel\ Harris\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\Config.h \
+ C:\Users\Daniel\ Harris\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\Endpoint.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WebServer\src/ESP8266WebServer.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/ESP8266WiFi.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/include/wl_definitions.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/IPAddress.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/Printable.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/init.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/opt.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwipopts.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/gluedebug.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/debug.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/arch.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/arch/cc.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip-err-t.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/mem.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/glue.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/user_interface.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/os_type.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/ets_sys.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/ipv4_addr.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/ip_addr.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/def.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/ip4_addr.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/ip6_addr.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/def.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/queue.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/spi_flash.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/gpio.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/gluedebug.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/ipv4_addr.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/limits.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/arch/cc.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip-git-hash.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/sys/time.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/debug.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/ESP8266WiFiType.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/queue.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/ESP8266WiFiSTA.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/ESP8266WiFiGeneric.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/ESP8266WiFiAP.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/ESP8266WiFiScan.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/WiFiClient.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/Print.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/Client.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/IPAddress.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/include/slist.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/WiFiServer.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/Server.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/WiFiServerSecure.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/WiFiClientSecure.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/WiFiClientSecureBearSSL.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/bearssl/bearssl.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/bearssl/bearssl_hash.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/bearssl/bearssl_hmac.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/bearssl/bearssl_kdf.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/bearssl/bearssl_rand.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/bearssl/bearssl_block.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/bearssl/bearssl_prf.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/bearssl/bearssl_aead.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/bearssl/bearssl_rsa.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/bearssl/bearssl_ec.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/bearssl/bearssl_ssl.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/bearssl/bearssl_x509.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/include/bearssl/bearssl_pem.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/BearSSLHelpers.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/Updater.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/CertStoreBearSSL.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/BearSSLHelpers.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/FS.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/WiFiServerSecureBearSSL.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/WiFiClientSecure.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WebServer\src/detail/mimetable.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WebServer\src/detail/RequestHandler.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WebServer\src/ESP8266WebServer-impl.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/libb64/cencode.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/WiFiServer.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/WiFiClient.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WebServer\src/ESP8266WebServer.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WebServer\src/detail/RequestHandlersImpl.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WebServer\src/detail/RequestHandler.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WebServer\src/detail/mimetable.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WebServer\src/Parsing-impl.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266HTTPClient\src/ESP8266HTTPClient.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266mDNS\src/ESP8266mDNS.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266mDNS\src/ESP8266mDNS_Legacy.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/WiFiUdp.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/Udp.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/include/slist.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266mDNS\src/LEAmDNS.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/udp.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/pbuf.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/err.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/netif.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/stats.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/mem.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/memp.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/priv/memp_std.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/priv/memp_priv.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/priv/mem_priv.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/ip.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/ip4.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/prot/ip4.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/ip6.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/prot/ip.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/lwip2/include/lwip/prot/udp.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/debug.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ESP8266WiFi\src/include/UdpContext.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3/tools/sdk/libc/xtensa-lx106-elf/include/assert.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/AddrList.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\cores\esp8266/PolledTimeout.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\ArduinoOTA/ArduinoOTA.h \
+ C:\Users\Daniel\ Harris\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\Setupserver.h \
+ C:\Users\Daniel\ Harris\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\ClientServer.h \
  D:\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson.h \
  D:\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson.hpp \
  D:\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/version.hpp \
@@ -218,6 +232,7 @@ C:\Users\Daniel's\ Gaming\ PC\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_ge
  D:\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Deserialization/../Serialization/../Serialization/FloatParts.hpp \
  D:\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Deserialization/../Serialization/../Serialization/../Polyfills/math.hpp \
  D:\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Deserialization/../Serialization/../Serialization/../TypeTraits/FloatTraits.hpp \
+ D:\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Deserialization/../Serialization/../Serialization/../TypeTraits/../Polyfills/alias_cast.hpp \
  D:\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Deserialization/../Serialization/Prettyfier.hpp \
  D:\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Deserialization/../Serialization/StaticStringBuilder.hpp \
  D:\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Deserialization/../RawJson.hpp \
@@ -250,5 +265,8 @@ C:\Users\Daniel's\ Gaming\ PC\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_ge
  D:\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Polyfills/parseFloat.hpp \
  D:\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Polyfills/parseInteger.hpp \
  D:\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Serialization/JsonSerializerImpl.hpp \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\MasterServer.h \
- C:\Users\Daniel's\ Gaming\ PC\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\Device.h
+ D:\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/compatibility.hpp \
+ C:\Users\Daniel\ Harris\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\MasterServer.h \
+ C:\Users\Daniel\ Harris\AppData\Local\Temp\VMBuilds\ESP_REST_V3\esp8266_generic\Debug\Device.h \
+ C:\Users\Daniel\ Harris\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.6.3\libraries\Wire/Wire.h \
+ D:\Documents\Arduino\libraries\Adafruit_MCP23017_Arduino_Library/Adafruit_MCP23017.h

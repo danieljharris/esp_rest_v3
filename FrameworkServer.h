@@ -13,6 +13,7 @@
 #include "Config.h"
 #include "Endpoint.h"
 
+#include <ESP8266HTTPClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266mDNS.h>
@@ -20,6 +21,9 @@
 
 class FrameworkServer {
 protected:
+	const int RELAYS[8] = { 13,12,14,2,0,4,5,16 };
+	bool RELAYS_STATE[8] = { true, true, true, true, true, true, true, true };
+
 	ESP8266WebServer server;
 	WiFiCredentials creds;
 
@@ -28,10 +32,15 @@ protected:
 	void addUnknownEndpoint();
 	void addEndpoints(std::vector<Endpoint> endpoints);
 
+	//To handle relay
+	void relayMode(uint8_t type);
+	void relayWrite(uint8_t pin, bool state);
+	void relayToggle(uint8_t pin);
+
 public:
 	virtual bool start() {};
 	virtual void update() {};
-	void handle() { server.handleClient(); };
+	virtual void handle() { server.handleClient(); };
 	~FrameworkServer();
 	void stop();
 };

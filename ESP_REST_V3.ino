@@ -21,7 +21,7 @@ void setup() {
 	if (!server->start()){
 		server = new MasterServer();
 		if (!server->start()) {
-			server = new SetupServer(); // ### Should keep checking for master here?
+			server = new SetupServer();
 			if (!server->start()) {
 				Serial.println("\nFailed to become client, master and setup. Restarting...");
 				ESP.restart();
@@ -36,4 +36,3 @@ void loop() {
 
 	if (period) server->update();
 }
-

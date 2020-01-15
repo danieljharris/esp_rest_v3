@@ -17,6 +17,7 @@ const int SETUP_PORT = 80;
 const int CLIENT_PORT = 80;
 const int MASTER_PORT = 235;
 
-const int GPIO_PIN = 0;
+const int GPIO_OUTPUT_PIN = 0;
+const int GPIO_INPUT_PIN = 2;
 
 #endif

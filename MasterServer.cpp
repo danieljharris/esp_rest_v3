@@ -14,8 +14,11 @@ bool MasterServer::start() {
 	else Serial.println("I am a master!");
 
 	//Sets the ESP's output pin to OFF
-	pinMode(GPIO_PIN, OUTPUT);
-	digitalWrite(GPIO_PIN, HIGH);
+	pinMode(GPIO_OUTPUT_PIN, OUTPUT);
+	//digitalWrite(GPIO_OUTPUT_PIN, HIGH);
+
+	//Sets the ESP's input pin
+	pinMode(GPIO_INPUT_PIN, INPUT_PULLUP);
 
 	//Starts access point for new devices to connect to
 	Serial.println("Opening soft access point...");
@@ -35,6 +38,9 @@ bool MasterServer::start() {
 
 	Serial.println("Enableing OTA updates...");
 	enableOTAUpdates();
+
+	Serial.println("Enableing relay pins...");
+	relayMode(OUTPUT);
 
 	Serial.println("Ready!");
 	return true;
@@ -382,11 +388,25 @@ std::function<void()> MasterServer::handleMasterPostLightSwitch() {
 		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
 
 		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+		if (!json.containsKey("action")) {
+			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"action_field_missing\"}");
+			return;
+		}
 		if (!json.containsKey("power")) {
 			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"power_field_missing\"}");
 			return;
 		}
-		server.send(HTTP_CODE_OK);
+		if (!json.containsKey("light_number")) {
+			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"light_number_field_missing\"}");
+			return;
+		}
+		//server.send(HTTP_CODE_OK);
+
+
+		String message;
+		json.printTo(message);
+		server.send(HTTP_CODE_OK, "application/json", message);
+
 
 		for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
 			Device device = *it;
@@ -399,8 +419,9 @@ std::function<void()> MasterServer::handleMasterPostLightSwitch() {
 				DynamicJsonBuffer jsonBuffer2;
 				JsonObject& toClient = jsonBuffer2.createObject();
 
-				toClient["action"] = "set";
+				toClient["action"] = json["action"];
 				toClient["power"] = json["power"];
+				toClient["light_number"] = json["light_number"];
 
 				String outputStr;
 				toClient.printTo(outputStr);
@@ -413,4 +434,42 @@ std::function<void()> MasterServer::handleMasterPostLightSwitch() {
 		}
 	};
 	return lambda;
+}
+
+
+//Poster demo
+void MasterServer::handle() {
+	server.handleClient();
+	//checkInputChange();
+};
+void MasterServer::checkInputChange() {
+	bool currentInputValue = (LOW == digitalRead(GPIO_INPUT_PIN));
+	if (lastInputValue != currentInputValue) {
+		Serial.println("Input changed!");
+		lastInputValue = currentInputValue;
+
+		for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
+			Device device = *it;
+			if (device.name.equals("LightBulb") || device.name.equals("Speaker")) {
+
+				String clientIp = device.ip + ":" + CLIENT_PORT;
+				String clientUrl = "http://" + clientIp + "/device";
+
+				//Creates the return json object
+				DynamicJsonBuffer jsonBuffer;
+				JsonObject& toClient = jsonBuffer.createObject();
+
+				toClient["action"] = "set";
+				toClient["power"] = currentInputValue;
+
+				String outputStr;
+				toClient.printTo(outputStr);
+
+				HTTPClient http;
+				http.begin(clientUrl);
+				http.POST(outputStr);
+				http.end();
+			}
+		}
+	}
 }

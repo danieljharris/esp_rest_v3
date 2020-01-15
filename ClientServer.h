@@ -45,6 +45,10 @@ private:
 	//Light switch example
 	std::function<void()> handleClientPostLightSwitch();
 
+	//Poster demo
+	bool lastInputValue = false;
+	void checkInputChange();
+
 protected:
 	//Client endpoints
 	std::vector<Endpoint> clientEndpoints{
@@ -56,7 +60,10 @@ protected:
 		Endpoint("/master", HTTP_POST, handleClientPostNewMaster()),
 
 		//Light switch example
-		Endpoint("/light/switch", HTTP_POST, handleClientPostLightSwitch()),
+		//Endpoint("/light/switch", HTTP_POST, handleClientPostLightSwitch()),
+
+		//Pandy Lights
+		Endpoint("/lights", HTTP_POST, handleClientPostLightSwitch()),
 	};
 
 	//General reusable functions for client & master servers
@@ -66,6 +73,7 @@ protected:
 public:
 	bool start();
 	void update();
+	void handle();
 };
 
 #endif

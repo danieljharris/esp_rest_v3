@@ -15,6 +15,9 @@
 #include <ESP8266HTTPClient.h>
 #include <unordered_set>
 
+#include <Wire.h>
+#include <Adafruit_MCP23017.h>
+
 //Used by unordered_set (clientLookup) to make a hash of each device
 namespace std {
 	template<> struct hash<Device> {
@@ -26,6 +29,10 @@ namespace std {
 
 class MasterServer : public ClientServer {
 private:
+
+	Adafruit_MCP23017 mcp;
+
+
 	//Master endpoint handleing
 	void addUnknownEndpoint();
 	std::function<void()> handleMasterGetWiFiInfo();
@@ -39,7 +46,7 @@ private:
 		Endpoint("/checkin", HTTP_POST, handleMasterPostCheckin()),
 
 		//Light switch example
-		Endpoint("/light/switch", HTTP_POST, handleMasterPostLightSwitch())
+		//Endpoint("/lights", HTTP_POST, handleMasterPostLightSwitch()),
 	};
 
 	//Master creation
@@ -62,9 +69,14 @@ private:
 	//Light switch example
 	std::function<void()> handleMasterPostLightSwitch();
 
+	//Poster demo
+	bool lastInputValue = false;
+	void checkInputChange();
+
 public:
 	bool start();
 	void update();
+	void handle();
 };
 
 #endif
