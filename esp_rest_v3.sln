@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.271
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30225.117
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ESP_REST_V3", "esp_rest_v3.vcxproj", "{BB121E79-7E32-485D-A8F6-745DD1F46537}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lib_less", "..\rest2\rest2.vcxproj", "{B6BC642D-5EA2-433F-AF33-065A6E83ECD4}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rest3", "..\rest3\rest3.vcxproj", "{48A22240-1238-4381-9AEF-5DA6EB8F7260}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QueryTesting", "..\..\..\..\Documents\Arduino\QueryTesting\QueryTesting.vcxproj", "{424AE982-0A9F-4062-B1B9-B657AC814FAE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{48A22240-1238-4381-9AEF-5DA6EB8F7260}.Debug|x86.Build.0 = Debug|Win32
 		{48A22240-1238-4381-9AEF-5DA6EB8F7260}.Release|x86.ActiveCfg = Release|Win32
 		{48A22240-1238-4381-9AEF-5DA6EB8F7260}.Release|x86.Build.0 = Release|Win32
+		{424AE982-0A9F-4062-B1B9-B657AC814FAE}.Debug|x86.ActiveCfg = Debug|Win32
+		{424AE982-0A9F-4062-B1B9-B657AC814FAE}.Debug|x86.Build.0 = Debug|Win32
+		{424AE982-0A9F-4062-B1B9-B657AC814FAE}.Release|x86.ActiveCfg = Release|Win32
+		{424AE982-0A9F-4062-B1B9-B657AC814FAE}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

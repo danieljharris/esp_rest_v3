@@ -14,8 +14,11 @@ bool MasterServer::start() {
 	else Serial.println("I am a master!");
 
 	//Sets the ESP's output pin to OFF
-	pinMode(GPIO_PIN, OUTPUT);
-	digitalWrite(GPIO_PIN, HIGH);
+	pinMode(GPIO_OUTPUT_PIN, OUTPUT);
+	digitalWrite(GPIO_OUTPUT_PIN, HIGH);
+
+	//Sets the ESP's input pin
+	pinMode(GPIO_INPUT_PIN, INPUT_PULLUP);
 
 	//Starts access point for new devices to connect to
 	Serial.println("Opening soft access point...");
@@ -35,6 +38,12 @@ bool MasterServer::start() {
 
 	Serial.println("Enableing OTA updates...");
 	enableOTAUpdates();
+
+	Serial.println("Registering on cloud...");
+	selfRegister();
+
+	Serial.println("Updating config from cloud...");
+	configUpdate();
 
 	Serial.println("Ready!");
 	return true;
@@ -245,17 +254,11 @@ String MasterServer::getDeviceIPFromIdOrName(String idOrName) {
 	return "";
 }
 void MasterServer::reDirect() {
-	String payload = "";
-	if (server.hasArg("plain")) payload = server.arg("plain");
-
-	DynamicJsonBuffer jsonBuffer;
-	JsonObject& json = jsonBuffer.parseObject(payload);
-
 	String idOrName = "";
-	if (json.containsKey("id")) idOrName = json["id"].asString();
-	else if (json.containsKey("name")) idOrName = json["name"].asString();
+	if (server.hasArg("id")) idOrName = server.arg("id");
+	else if (server.hasArg("name")) idOrName = server.arg("name");
 	else {
-		server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"name_or_id_not_found\"}");
+		server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"name_and_id_missing\"}");
 		return;
 	}
 
@@ -266,55 +269,65 @@ void MasterServer::reDirect() {
 		return;
 	}
 
-	HTTPClient http;
-	http.setTimeout(2000); //Reduced the timeout from 5000 to fail faster
-	http.begin("http://" + ip + ":" + CLIENT_PORT + server.uri());
+	WiFiClient client;
+	if (client.connect(ip, CLIENT_PORT)) {
+		HTTPClient http;
+		http.setTimeout(2000); //Reduced the timeout from 5000 to fail faster
+		http.begin(client, ip, CLIENT_PORT, server.uri());
 
-	int httpCode = http.sendRequest(getMethod(), payload);
+		String payload = "";
+		if (server.hasArg("plain")) payload = server.arg("plain");
+		int httpCode = http.sendRequest(getMethod(), payload);
 
-	//HttpCode is only below 0 when there is an issue contacting client
-	if (httpCode < 0) {
-		http.end();
+		//HttpCode is only below 0 when there is an issue contacting client
+		if (httpCode < 0) {
+			http.end();
 
-		//If client can not be reached it is removed from the clientLookup
-		for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
-			if (it->ip.equals(ip)) {
-				clientLookup.erase(it);
-				break;
+			//If client can not be reached it is removed from the clientLookup
+			for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
+				if (it->ip.equals(ip)) {
+					clientLookup.erase(it);
+					break;
+				}
 			}
+
+			String reply = "{\"error\":\"error_contacting_device\"}";
+			server.send(HTTP_CODE_BAD_GATEWAY, "application/json", reply);
+			return;
 		}
-
-		String reply = "{\"error\":\"error_contacting_device\"}";
-		server.send(HTTP_CODE_BAD_GATEWAY, "application/json", reply);
-		return;
+		else {
+			// Warning: getString() has been known to cause Exceptions
+			server.send(httpCode, "application/json", http.getString());
+			//server.send(httpCode, "application/json");
+			http.end();
+			return;
+		}
 	}
 	else {
-		String reply = http.getString();
-		http.end();
-		server.send(httpCode, "application/json", reply);
+		server.send(500, "application/json");
 		return;
 	}
 }
-String MasterServer::reDirect(String ip) {
-	HTTPClient http;
-	http.begin("http://" + ip + ":" + CLIENT_PORT + server.uri());
-
-	String payload = "";
-	if (server.hasArg("plain")) payload = server.arg("plain");
-
-	int httpCode = http.sendRequest(getMethod(), payload);
-
-	//HttpCode is only below 0 when there is an issue contacting client
-	if (httpCode < 0) {
-		http.end();
-		return "error";
-	}
-	else {
-		String reply = http.getString();
-		http.end();
-		return reply;
-	}
-}
+//String MasterServer::reDirect(String ip) {
+//	HTTPClient http;
+//	http.begin("http://" + ip + ":" + CLIENT_PORT + server.uri());
+//
+//	String payload = "";
+//	if (server.hasArg("plain")) payload = server.arg("plain");
+//
+//	int httpCode = http.sendRequest(getMethod(), payload);
+//
+//	//HttpCode is only below 0 when there is an issue contacting client
+//	if (httpCode < 0) {
+//		http.end();
+//		return "error";
+//	}
+//	else {
+//		String reply = http.getString();
+//		http.end();
+//		return reply;
+//	}
+//}
 void MasterServer::expireClientLookup() {
 	Serial.println("Handleing client expiring");
 	for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ) {
@@ -340,77 +353,107 @@ const char* MasterServer::getMethod() {
 	return method;
 }
 bool MasterServer::isForMe() {
-	DynamicJsonBuffer jsonBuffer;
-	JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
-
-	if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return false; }
-	if (!json.containsKey("id") && !json.containsKey("name")) { server.send(HTTP_CODE_BAD_REQUEST); return false; }
-
-	if (json.containsKey("id")) {
-		String id = json["id"];
+	if (server.hasArg("id")) {
+		String id = server.arg("id");
 		String myId = (String)ESP.getChipId();
 		return myId.equals(id);
 	}
-	else if (json.containsKey("name")) {
-		String name = json["name"];
+	else if (server.hasArg("name")) {
+		String name = server.arg("name");
 		WiFiInfo info = creds.load();
 		String myName = info.hostname;
 		return myName.equals(name);
 	}
-	else return false;
+	else {
+		server.send(HTTP_CODE_BAD_REQUEST);
+		return false;
+	}
 }
 bool MasterServer::validIdOrName() {
-	if (!server.hasArg("plain")) return false;
-
-	DynamicJsonBuffer jsonBuffer;
-	JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
-
-	if (!json.success()) return false;
-	else if (!json.containsKey("id") && !json.containsKey("name")) return false;
+	if (!server.hasArg("id") && !server.hasArg("name")) return false;
 	else return true;
 }
 
 
 //Light switch example
-std::function<void()> MasterServer::handleMasterPostLightSwitch() {
-	std::function<void()> lambda = [=]() {
-		Serial.println("Entering handleMasterPostLightSwitch");
 
-		if (!server.hasArg("plain")) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+//std::function<void()> MasterServer::handleMasterPostLightSwitch() {
+//	std::function<void()> lambda = [=]() {
+//		Serial.println("Entering handleMasterPostLightSwitch");
+//
+//		if (!server.hasArg("plain")) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+//
+//		DynamicJsonBuffer jsonBuffer;
+//		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+//
+//		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+//		if (!json.containsKey("power")) {
+//			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"power_field_missing\"}");
+//			return;
+//		}
+//		server.send(HTTP_CODE_OK);
+//
+//		for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
+//			Device device = *it;
+//			if (device.name.equals("LightBulb")) {
+//
+//				String clientIp = device.ip + ":" + CLIENT_PORT;
+//				String clientUrl = "http://" + clientIp + "/device";
+//
+//				//Creates the return json object
+//				DynamicJsonBuffer jsonBuffer2;
+//				JsonObject& toClient = jsonBuffer2.createObject();
+//
+//				toClient["action"] = "set";
+//				toClient["power"] = json["power"];
+//
+//				String outputStr;
+//				toClient.printTo(outputStr);
+//
+//				HTTPClient http;
+//				http.begin(clientUrl);
+//				http.POST(outputStr);
+//				http.end();
+//			}
+//		}
+//	};
+//	return lambda;
+//}
 
-		DynamicJsonBuffer jsonBuffer;
-		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+void MasterServer::handle() {
+	server.handleClient();
+	checkInputChange();
+};
+void MasterServer::checkInputChange() {
+	bool currentInputValue = (LOW == digitalRead(GPIO_INPUT_PIN));
+	if (lastInputValue != currentInputValue) {
+		Serial.println("Input changed!");
+		lastInputValue = currentInputValue;
 
-		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return; }
-		if (!json.containsKey("power")) {
-			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"power_field_missing\"}");
-			return;
-		}
-		server.send(HTTP_CODE_OK);
+		ConnectedInfo conDevice = connected.load();
 
-		for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
-			Device device = *it;
-			if (device.name.equals("LightBulb")) {
+		String id = conDevice.id;
+		String method = conDevice.method;
+		String path = conDevice.path;
+		String data = conDevice.data;
 
-				String clientIp = device.ip + ":" + CLIENT_PORT;
-				String clientUrl = "http://" + clientIp + "/device";
+		if (!id.isEmpty() && !method.isEmpty() && !path.isEmpty() && !data.isEmpty()) {
+			for (std::unordered_set<Device>::iterator it = clientLookup.begin(); it != clientLookup.end(); ++it) {
+				Device device = *it;
+				if (device.id == id) {
 
-				//Creates the return json object
-				DynamicJsonBuffer jsonBuffer2;
-				JsonObject& toClient = jsonBuffer2.createObject();
+					String clientIp = device.ip + ":" + CLIENT_PORT;
+					String clientUrl = "http://" + clientIp + "/" + path;
 
-				toClient["action"] = "set";
-				toClient["power"] = json["power"];
+					HTTPClient http;
+					http.begin(clientUrl);
 
-				String outputStr;
-				toClient.printTo(outputStr);
+					if (method == "POST") http.POST(data);
+					if (method == "PUT")  http.PUT(data);
 
-				HTTPClient http;
-				http.begin(clientUrl);
-				http.POST(outputStr);
-				http.end();
+					http.end();
+				}
 			}
 		}
-	};
-	return lambda;
+	}
 }

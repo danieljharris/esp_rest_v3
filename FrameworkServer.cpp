@@ -60,3 +60,60 @@ void FrameworkServer::addEndpoints(std::vector<Endpoint> endpoints) {
 		server.on(it->path, it->method, it->function);
 	}
 }
+
+void FrameworkServer::selfRegister() {
+	DynamicJsonBuffer jsonBuffer;
+	JsonObject& json = jsonBuffer.createObject();
+
+	json["id"] = ESP.getChipId();
+	json["name"] = creds.load().hostname;
+
+	String body;
+	json.printTo(body);
+
+	String ip = CLOUD_IP + ":" + CLOUD_PORT;
+	String url = "http://" + ip + "/device";
+
+	HTTPClient http;
+	http.begin(url);
+	http.POST(body);
+	http.end();
+}
+
+void FrameworkServer::configUpdate() {
+	WiFiClient client;
+	if (!client.connect(CLOUD_IP, CLOUD_PORT)) return;
+	client.print(String("GET /config?id=") + ESP.getChipId() + " HTTP/1.1\r\n" +
+		"Host: " + CLOUD_IP + "\r\n" +
+		"Connection: close\r\n" +
+		"\r\n"
+	);
+
+	String payload;
+
+	// Gets the last line of the message
+	while (client.connected() || client.available()) {
+		if (client.available()) payload = client.readStringUntil('\n');
+	}
+	client.stop();
+
+	if (payload == "") return;
+
+	DynamicJsonBuffer jsonBuffer;
+	JsonObject& json = jsonBuffer.parseObject(payload);
+
+	if (!json.success()
+		|| !json.containsKey("dest_id")
+		|| !json.containsKey("method")
+		|| !json.containsKey("path")
+		|| !json.containsKey("data")) return;
+
+	String id     = json["dest_id"].asString();
+	String method = json["method"].asString();
+	String path   = json["path"].asString();
+
+	String data = "";
+	DynamicJsonBuffer().parseObject(json["data"].asString()).printTo(data);
+
+	connected.save(id, method, path, data);
+}

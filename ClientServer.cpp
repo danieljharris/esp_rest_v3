@@ -14,8 +14,11 @@ bool ClientServer::start() {
 	else Serial.println("I am a client!");
 
 	//Sets the ESP's output pin to OFF
-	pinMode(GPIO_PIN, OUTPUT);
-	digitalWrite(GPIO_PIN, HIGH);
+	pinMode(GPIO_OUTPUT_PIN, OUTPUT);
+	digitalWrite(GPIO_OUTPUT_PIN, HIGH);
+
+	//Sets the ESP's input pin
+	pinMode(GPIO_INPUT_PIN, INPUT_PULLUP);
 
 	Serial.println("Letting master know I exist...");
 	checkinWithMaster();
@@ -34,6 +37,12 @@ bool ClientServer::start() {
 
 	Serial.println("Enableing OTA updates...");
 	enableOTAUpdates();
+
+	Serial.println("Registering on cloud...");
+	selfRegister();
+
+	Serial.println("Updating config from cloud...");
+	configUpdate();
 
 	Serial.println("Ready!");
 	return true;
@@ -272,6 +281,44 @@ std::function<void()> ClientServer::handleClientPostNewMaster() {
 	return lambda;
 }
 
+//Configurable connected device
+std::function<void()> ClientServer::handleClientGetConnected() {
+	std::function<void()> lambda = [=]() {
+		Serial.println("Entering handleClientGetConnected");
+		server.send(HTTP_CODE_OK, "application/json", getConnected());
+	};
+	return lambda;
+}
+std::function<void()> ClientServer::handleClientPostConnected() {
+	std::function<void()> lambda = [=]() {
+		Serial.println("Entering handleClientPostConnected");
+
+		if (!server.hasArg("plain")) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+
+		String inputString = server.arg("plain");
+
+		DynamicJsonBuffer jsonBuffer;
+		JsonObject& json = jsonBuffer.parseObject(inputString);
+
+		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+
+		if (!json.containsKey("dest_id") || !json.containsKey("method") || !json.containsKey("path") || !json.containsKey("data")) {
+			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"missing_required_field\"}");
+			return;
+		}
+
+		String id     = json["dest_id"].asString();
+		String method = json["method"].asString();
+		String path   = json["path"].asString();
+		String data   = json["data"].asString();
+
+		connected.save(id, method, path, data);
+		server.send(HTTP_CODE_OK, "application/json");
+	};
+	return lambda;
+}
+
+
 //Client creation
 void ClientServer::startMDNS() {
 	DynamicJsonBuffer jsonBuffer;
@@ -317,15 +364,23 @@ bool ClientServer::findMaster() {
 bool ClientServer::getAndSaveMainWiFiInfo() {
 	Serial.println("Entering getAndSaveMainWiFiInfo");
 
-	String ip = WiFi.gatewayIP().toString() + ":" + MASTER_PORT;
-	String url = "http://" + ip + "/wifi_info";
+	WiFiClient client;
+	String host = WiFi.gatewayIP().toString();
 
-	HTTPClient http;
-	http.begin(url);
+	if (client.connect(host, MASTER_PORT)) {
+		client.print(String("GET /wifi_info") + " HTTP/1.1\r\n" +
+			"Host: " + host + "\r\n" +
+			"Connection: close\r\n" +
+			"\r\n"
+		);
 
-	if (http.GET() == HTTP_CODE_OK) {
-		String payload = http.getString();
-		http.end();
+		String payload;
+
+		// Gets the last line of the message
+		while (client.connected() || client.available()) {
+			if (client.available()) payload = client.readStringUntil('\n');
+		}
+		client.stop();
 
 		DynamicJsonBuffer jsonBuffer;
 		JsonObject& json = jsonBuffer.parseObject(payload);
@@ -340,10 +395,11 @@ bool ClientServer::getAndSaveMainWiFiInfo() {
 		String password = json["password"].asString();
 
 		creds.save(ssid, password);
+
 		return true;
 	}
 	else {
-		http.end();
+		client.stop();
 		Serial.println("Failed to get WiFi credentials from master");
 		return false;
 	}
@@ -498,50 +554,124 @@ void ClientServer::power_on() {
 	Serial.println("Entering power_on");
 
 	gpioPinState = true;
-	digitalWrite(GPIO_PIN, LOW);
+	digitalWrite(GPIO_OUTPUT_PIN, LOW);
 }
 void ClientServer::power_off() {
 	Serial.println("Entering power_off");
 
 	gpioPinState = false;
-	digitalWrite(GPIO_PIN, HIGH);
+	digitalWrite(GPIO_OUTPUT_PIN, HIGH);
 }
 
 
 //Light switch example
-std::function<void()> ClientServer::handleClientPostLightSwitch() {
-	std::function<void()> lambda = [=]() {
-		Serial.println("Entering handleClientPostLightSwitch");
 
-		if (!server.hasArg("plain")) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+//std::function<void()> ClientServer::handleClientPostLightSwitch() {
+//	std::function<void()> lambda = [=]() {
+//		Serial.println("Entering handleClientPostLightSwitch");
+//
+//		if (!server.hasArg("plain")) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+//
+//		DynamicJsonBuffer jsonBuffer;
+//		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
+//
+//		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return; }
+//		if (!json.containsKey("power")) {
+//			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"power_field_missing\"}");
+//			return;
+//		}
+//		server.send(HTTP_CODE_OK);
+//
+//		String ip = masterIP + ":" + MASTER_PORT;
+//		String url = "http://" + ip + "/device";
+//
+//		DynamicJsonBuffer jsonBuffer2;
+//		JsonObject& toClient = jsonBuffer2.createObject();
+//
+//		toClient["name"] = "LightBulb";
+//		toClient["action"] = "set";
+//		toClient["power"] = json["power"];
+//
+//		String body;
+//		toClient.printTo(body);
+//
+//		HTTPClient http;
+//		http.begin(url);
+//		http.POST(body);
+//		http.end();
+//	};
+//	return lambda;
+//}
 
-		DynamicJsonBuffer jsonBuffer;
-		JsonObject& json = jsonBuffer.parseObject(server.arg("plain"));
 
-		if (!json.success()) { server.send(HTTP_CODE_BAD_REQUEST); return; }
-		if (!json.containsKey("power")) {
-			server.send(HTTP_CODE_BAD_REQUEST, "application/json", "{\"error\":\"power_field_missing\"}");
-			return;
+String ClientServer::getConnected() {
+	DynamicJsonBuffer jsonBuffer;
+	JsonObject& json = jsonBuffer.createObject();
+
+	ConnectedInfo device = connected.load();
+
+	String id     = device.id;
+	String method = device.method;
+	String path   = device.path;
+	String data   = device.data;
+
+	if (!id.isEmpty())     json["dest_id"] = id;
+	if (!method.isEmpty()) json["method"] = method;
+	if (!path.isEmpty())   json["path"] = path;
+	if (!data.isEmpty()) {
+		StaticJsonBuffer<200> jsonDataBuffer;
+		JsonObject& jsonData = jsonDataBuffer.parseObject(data);
+		if (!jsonData.success()) { Serial.println("JSON Read Error"); }
+		json["data"] = jsonData;
+	}
+
+	String result;
+	json.printTo(result);
+
+	return result;
+}
+
+void ClientServer::handle() {
+	server.handleClient();
+	checkInputChange();
+};
+void ClientServer::checkInputChange() {
+	bool currentInputValue = (LOW == digitalRead(GPIO_INPUT_PIN));
+	if (lastInputValue != currentInputValue) {
+		Serial.println("Input changed!");
+		lastInputValue = currentInputValue;
+
+		ConnectedInfo conDevice = connected.load();
+
+		String id = conDevice.id;
+		String method = conDevice.method;
+		String path = conDevice.path;
+		String data = conDevice.data;
+
+		if (!id.isEmpty() && !method.isEmpty() && !path.isEmpty() && !data.isEmpty()) {
+			DynamicJsonBuffer jsonBuffer;
+			JsonObject& json = jsonBuffer.parseObject(data);
+
+			if (!json.success()) {
+				Serial.print("Error reading json from memory: ");
+				Serial.println(data);
+				return;
+			}
+
+			String dataWithID;
+			json.printTo(dataWithID);
+
+			String ip = masterIP + ":" + MASTER_PORT;
+			String url = "http://" + ip + "/" + path + "?id=" + id;
+
+			// Send http command to connected device
+			HTTPClient http;
+			http.begin(url);
+
+			if (method == "PUT")  http.PUT(dataWithID);
+			if (method == "POST") http.POST(dataWithID);
+
+			http.end();
 		}
-		server.send(HTTP_CODE_OK);
-
-		String ip = masterIP + ":" + MASTER_PORT;
-		String url = "http://" + ip + "/device";
-
-		DynamicJsonBuffer jsonBuffer2;
-		JsonObject& toClient = jsonBuffer2.createObject();
-
-		toClient["name"] = "LightBulb";
-		toClient["action"] = "set";
-		toClient["power"] = json["power"];
-
-		String body;
-		toClient.printTo(body);
-
-		HTTPClient http;
-		http.begin(url);
-		http.POST(body);
-		http.end();
-	};
-	return lambda;
+	}
 }

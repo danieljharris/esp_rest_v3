@@ -39,7 +39,7 @@ private:
 		Endpoint("/checkin", HTTP_POST, handleMasterPostCheckin()),
 
 		//Light switch example
-		Endpoint("/light/switch", HTTP_POST, handleMasterPostLightSwitch())
+		//Endpoint("/light/switch", HTTP_POST, handleMasterPostLightSwitch())
 	};
 
 	//Master creation
@@ -51,7 +51,7 @@ private:
 	std::unordered_set<Device> clientLookup;
 	String getDeviceIPFromIdOrName(String idOrName);
 	void reDirect();
-	String reDirect(String ip);
+	//String reDirect(String ip);
 	void expireClientLookup();
 
 	//Helper functions for REST routing
@@ -60,11 +60,15 @@ private:
 	bool validIdOrName();
 
 	//Light switch example
-	std::function<void()> handleMasterPostLightSwitch();
+	//std::function<void()> handleMasterPostLightSwitch();
+
+	bool lastInputValue = false;
+	void checkInputChange();
 
 public:
 	bool start();
 	void update();
+	void handle();
 };
 
 #endif

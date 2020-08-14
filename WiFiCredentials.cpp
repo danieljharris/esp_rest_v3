@@ -33,6 +33,7 @@ void WiFiCredentials::save(String ssid, String password, String hostname) {
 	EEPROM.put(0 + sizeof(ssidChr) + sizeof(passwordChr), hostnameChr);
 	char ok[2 + 1] = "OK";
 	EEPROM.put(0 + sizeof(ssidChr) + sizeof(passwordChr) + sizeof(hostnameChr), ok);
+
 	EEPROM.commit();
 	EEPROM.end();
 }
@@ -49,6 +50,7 @@ WiFiInfo WiFiCredentials::load() {
 	char ok[2 + 1];
 	EEPROM.get(0 + sizeof(ssidChr) + sizeof(passwordChr) + sizeof(hostnameChr), ok);
 	EEPROM.end();
+
 	if (String(ok) != String("OK")) {
 		ssidChr[0] = 0;
 		passwordChr[0] = 0;

@@ -11,8 +11,6 @@
 
 #include "FrameworkServer.h"
 
-#include <ArduinoJson.h>
-
 class ClientServer : public FrameworkServer {
 private:
 	//Client endpoint handleing
@@ -22,6 +20,10 @@ private:
 	std::function<void()> handleClientPostWiFiCreds();
 	std::function<void()> handleClientPostRestart();
 	std::function<void()> handleClientPostNewMaster();
+
+	//Handle configurable connected device
+	std::function<void()> handleClientGetConnected();
+	std::function<void()> handleClientPostConnected();
 
 	//Client creation
 	void startMDNS();
@@ -43,7 +45,7 @@ private:
 	bool gpioPinState = false;
 
 	//Light switch example
-	std::function<void()> handleClientPostLightSwitch();
+	//std::function<void()> handleClientPostLightSwitch();
 
 protected:
 	//Client endpoints
@@ -55,17 +57,27 @@ protected:
 		Endpoint("/restart", HTTP_POST, handleClientPostRestart()),
 		Endpoint("/master", HTTP_POST, handleClientPostNewMaster()),
 
+		//Handle configurable connected device
+		Endpoint("/connected", HTTP_GET, handleClientGetConnected()),
+		Endpoint("/connected", HTTP_POST, handleClientPostConnected()),
+
 		//Light switch example
-		Endpoint("/light/switch", HTTP_POST, handleClientPostLightSwitch()),
+		//Endpoint("/light/switch", HTTP_POST, handleClientPostLightSwitch()),
 	};
 
 	//General reusable functions for client & master servers
 	String getDeviceInfo();
 	bool connectToWiFi(WiFiInfo info);
 
+	String getConnected();
+
+	bool lastInputValue = false;
+	void checkInputChange();
+
 public:
 	bool start();
 	void update();
+	void handle();
 };
 
 #endif

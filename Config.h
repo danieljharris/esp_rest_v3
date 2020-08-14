@@ -17,6 +17,10 @@ const int SETUP_PORT = 80;
 const int CLIENT_PORT = 80;
 const int MASTER_PORT = 235;
 
-const int GPIO_PIN = 0;
+const int GPIO_OUTPUT_PIN = 0;
+const int GPIO_INPUT_PIN = 2;
+
+const String CLOUD_IP = "192.168.1.179";
+const int CLOUD_PORT = 5000;
 
 #endif
